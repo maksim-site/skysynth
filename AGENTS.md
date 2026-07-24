@@ -17,3 +17,6 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Never stretch or fill-crop electronics. Keep the complete identity-critical board inside a `contain` treatment with deliberate breathing room.
 - The hero, all three development cards, and process evidence use AI-generated concept renders based on supplied company boards and photographs. Every visible concept image has a paired Carbon / Champagne and Light Laboratory asset selected by the theme control.
 - Label every concept image explicitly as `Концептуальная визуализация` and replace it with a client-approved render from real 3D files or a controlled product-photo set when available.
+- Ground all visible service copy in `скс.docx`. Do not add clients, figures, specifications, certifications or capabilities that are absent from the supplied material.
+- Keep visible Russian copy plain and natural. Avoid promotional filler and em dashes.
+- The intake form is intentionally simple: name, company, phone/email and a short message. Do not add a technical-brief upload unless the user asks for it again.

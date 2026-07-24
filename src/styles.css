@@ -697,23 +697,6 @@ textarea:focus-visible {
   border-color: var(--line-strong);
 }
 
-.file-label input {
-  height: auto;
-  min-height: 50px;
-  padding: 10px 12px;
-}
-
-.file-label input::file-selector-button {
-  min-height: 32px;
-  margin-right: 12px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  background: transparent;
-  color: var(--ivory);
-  cursor: pointer;
-}
-
 .project-form .button {
   width: 100%;
 }
