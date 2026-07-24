@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 
+const assetPath = (path) =>
+  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+
 const navigation = [
   { label: "Компетенции", href: "#competencies" },
   { label: "Разработки", href: "#developments" },
@@ -10,18 +13,18 @@ const navigation = [
 
 const heroAssets = {
   dark: {
-    desktop: "/assets/images/hero-concept-dark-wide.webp",
-    mobile: "/assets/images/hero-concept-dark.webp",
+    desktop: assetPath("assets/images/hero-concept-dark-wide.webp"),
+    mobile: assetPath("assets/images/hero-concept-dark.webp"),
   },
   light: {
-    desktop: "/assets/images/hero-concept-light-wide.webp",
-    mobile: "/assets/images/hero-concept-light.webp",
+    desktop: assetPath("assets/images/hero-concept-light-wide.webp"),
+    mobile: assetPath("assets/images/hero-concept-light.webp"),
   },
 };
 
 const processAssets = {
-  dark: "/assets/images/process-concept-dark.webp",
-  light: "/assets/images/process-concept-light.webp",
+  dark: assetPath("assets/images/process-concept-dark.webp"),
+  light: assetPath("assets/images/process-concept-light.webp"),
 };
 
 const competencies = [
@@ -53,8 +56,8 @@ const developments = [
     title: "Полётные контроллеры",
     text: "Проектируем полётные контроллеры с учётом габаритов корпуса, вибрационных нагрузок и тепловыделения.",
     images: {
-      dark: "/assets/images/flight-controller-concept.webp",
-      light: "/assets/images/flight-controller-concept-light.webp",
+      dark: assetPath("assets/images/flight-controller-concept.webp"),
+      light: assetPath("assets/images/flight-controller-concept-light.webp"),
     },
     alt: "Концептуальный рендер печатной платы полётного контроллера на лабораторном стенде",
     mediaLabel: "Концептуальная визуализация",
@@ -66,8 +69,8 @@ const developments = [
     title: "ESC и силовая электроника",
     text: "Проектируем регуляторы скорости, силовые линии и платы силовой электроники.",
     images: {
-      dark: "/assets/images/esc-concept.webp",
-      light: "/assets/images/esc-concept-light.webp",
+      dark: assetPath("assets/images/esc-concept.webp"),
+      light: assetPath("assets/images/esc-concept-light.webp"),
     },
     alt: "Концептуальный рендер платы силовой электроники на лабораторном стенде",
     mediaLabel: "Концептуальная визуализация",
@@ -79,8 +82,8 @@ const developments = [
     title: "Модули связи",
     text: "Разрабатываем видеопередатчики, каналы связи, СВЧ-узлы и высокочастотные тракты.",
     images: {
-      dark: "/assets/images/comms-concept.webp",
-      light: "/assets/images/comms-concept-light.webp",
+      dark: assetPath("assets/images/comms-concept.webp"),
+      light: assetPath("assets/images/comms-concept-light.webp"),
     },
     alt: "Концептуальный рендер модуля связи на лабораторном стенде",
     mediaLabel: "Концептуальная визуализация",
