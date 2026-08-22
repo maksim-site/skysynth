@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080b0d" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-sks59-no-frame.png" />
+    <title>СКАЙСИНТ — примерка логотипов</title>
+    <style>
+      @font-face {
+        font-family: "Manrope";
+        src: url("../assets/fonts/manrope-400.woff2") format("woff2");
+        font-weight: 400;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Manrope";
+        src: url("../assets/fonts/manrope-600.woff2") format("woff2");
+        font-weight: 600;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Manrope";
+        src: url("../assets/fonts/manrope-800.woff2") format("woff2");
+        font-weight: 800;
+        font-display: swap;
+      }
+
+      :root {
+        color-scheme: dark;
+        --bg: #080b0d;
+        --panel: #111518;
+        --panel-soft: rgba(17, 21, 24, 0.88);
+        --ink: #f2efe8;
+        --muted: #9d9d96;
+        --gold: #ffbd16;
+        --gold-soft: #d4b487;
+        --line: rgba(242, 239, 232, 0.14);
+        --line-gold: rgba(255, 189, 22, 0.45);
+        --ivory-tile: #f5f1e8;
+        --header: rgba(8, 11, 13, 0.9);
+        --shadow: 0 34px 90px rgba(0, 0, 0, 0.44);
+      }
+
+      :root[data-theme="light"] {
+        color-scheme: light;
+        --bg: #f4f3ef;
+        --panel: #fbfaf7;
+        --panel-soft: rgba(251, 250, 247, 0.9);
+        --ink: #17191b;
+        --muted: #646665;
+        --gold: #d99900;
+        --gold-soft: #8b632e;
+        --line: rgba(23, 25, 27, 0.14);
+        --line-gold: rgba(154, 104, 25, 0.38);
+        --ivory-tile: #f5f1e8;
+        --header: rgba(244, 243, 239, 0.9);
+        --shadow: 0 34px 90px rgba(75, 62, 35, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-width: 320px;
+        background: var(--bg);
+      }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        overflow-x: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Manrope", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      a {
+        color: inherit;
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 4px;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .page {
+        min-height: 100svh;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+      }
+
+      .page::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -3;
+        background:
+          radial-gradient(circle at 72% 40%, rgba(255, 189, 22, 0.085), transparent 26%),
+          linear-gradient(135deg, transparent 0 46%, rgba(255, 255, 255, 0.018) 46% 46.1%, transparent 46.1% 100%),
+          var(--bg);
+      }
+
+      .page::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        opacity: 0.42;
+        background-image:
+          linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 84px 84px;
+        mask-image: linear-gradient(to bottom, transparent 0, #000 18%, transparent 84%);
+      }
+
+      .site-header {
+        height: 90px;
+        border-bottom: 1px solid var(--line-gold);
+        background: var(--header);
+        backdrop-filter: blur(18px);
+        position: relative;
+        z-index: 20;
+      }
+
+      .header-inner {
+        width: min(100%, 1586px);
+        height: 100%;
+        margin: 0 auto;
+        padding: 0 clamp(20px, 3.3vw, 54px);
+        display: flex;
+        align-items: center;
+        gap: 28px;
+      }
+
+      .brand-lockup {
+        min-width: 312px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-decoration: none;
+      }
+
+      .brand-thumb {
+        width: 94px;
+        height: 56px;
+        flex: 0 0 94px;
+        position: relative;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .brand-thumb img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transform: scale(0.92);
+        transform-origin: center;
+        transition: opacity 180ms ease, transform 280ms ease;
+      }
+
+      .brand-name {
+        display: grid;
+        gap: 1px;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.075em;
+        line-height: 1.15;
+      }
+
+      .brand-name span:last-child {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+      }
+
+      .site-nav {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: clamp(22px, 3vw, 46px);
+      }
+
+      .site-nav span {
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .lab-badge {
+        min-height: 36px;
+        padding: 0 13px;
+        border: 1px solid var(--line-gold);
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        color: var(--gold-soft);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .theme-button {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: transparent;
+        color: var(--ink);
+        font-size: 16px;
+      }
+
+      .hero {
+        width: min(100%, 1586px);
+        min-height: calc(100svh - 90px);
+        margin: 0 auto;
+        padding: clamp(46px, 6vh, 78px) clamp(20px, 4vw, 64px) 190px;
+        display: grid;
+        grid-template-columns: minmax(360px, 0.9fr) minmax(480px, 1.1fr);
+        align-items: center;
+        gap: clamp(40px, 6vw, 100px);
+      }
+
+      .hero-copy {
+        position: relative;
+        z-index: 3;
+      }
+
+      .eyebrow {
+        margin: 0 0 22px;
+        color: var(--gold-soft);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        max-width: 660px;
+        margin: 0;
+        font-size: clamp(48px, 5vw, 76px);
+        font-weight: 800;
+        letter-spacing: -0.055em;
+        line-height: 0.95;
+      }
+
+      .hero h1 span {
+        display: block;
+        white-space: nowrap;
+      }
+
+      .hero-description {
+        max-width: 545px;
+        margin: 30px 0 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        margin-top: 38px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+      }
+
+      .primary-action {
+        min-height: 54px;
+        padding: 0 26px;
+        border: 0;
+        border-radius: 5px;
+        background: var(--ink);
+        color: var(--bg);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .text-action {
+        min-height: 44px;
+        padding: 0;
+        border: 0;
+        border-bottom: 1px solid var(--gold-soft);
+        background: transparent;
+        color: var(--gold-soft);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .brand-stage {
+        min-height: 520px;
+        position: relative;
+        display: grid;
+        place-items: center;
+      }
+
+      .brand-stage::before {
+        content: "";
+        position: absolute;
+        inset: 4% 0 1%;
+        border: 1px solid var(--line);
+        background:
+          linear-gradient(90deg, rgba(8, 11, 13, 0.93), rgba(8, 11, 13, 0.48)),
+          url("../assets/images/hero-stage-dark-logo-lab.webp") center / cover no-repeat;
+        clip-path: polygon(7% 0, 100% 0, 100% 86%, 92% 100%, 0 100%, 0 14%);
+        box-shadow: var(--shadow);
+      }
+
+      :root[data-theme="light"] .brand-stage::before {
+        background:
+          linear-gradient(90deg, rgba(239, 236, 227, 0.88), rgba(239, 236, 227, 0.32)),
+          url("../assets/images/hero-stage-light-logo-lab.webp") center / cover no-repeat;
+      }
+
+      .brand-stage::after {
+        content: none;
+      }
+
+      .logo-specimen {
+        width: min(42%, 340px);
+        height: 58%;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        transform: translate(-50%, -50%);
+        transition: transform 280ms ease, opacity 180ms ease;
+      }
+
+      .logo-specimen img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: opacity 180ms ease, transform 280ms ease;
+      }
+
+      .specimen-note {
+        position: absolute;
+        z-index: 3;
+        right: 2%;
+        bottom: 1%;
+        margin: 0;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        background: var(--panel-soft);
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .switcher {
+        width: min(calc(100% - 40px), 1180px);
+        min-height: 122px;
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 30;
+        transform: translateX(-50%);
+        padding: 16px 18px;
+        border: 1px solid var(--line-gold);
+        border-radius: 14px;
+        display: grid;
+        grid-template-columns: minmax(240px, 0.9fr) minmax(430px, 1.55fr) auto;
+        align-items: center;
+        gap: 22px;
+        background: var(--panel-soft);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+        backdrop-filter: blur(22px);
+      }
+
+      .current-meta {
+        min-width: 0;
+      }
+
+      .current-kicker {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--gold-soft);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .current-kicker::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--gold);
+        box-shadow: 0 0 0 4px rgba(255, 189, 22, 0.11);
+      }
+
+      .current-title {
+        margin: 8px 0 0;
+        overflow: hidden;
+        font-size: 16px;
+        font-weight: 800;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .current-note {
+        margin: 4px 0 0;
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .palette-toggle {
+        width: fit-content;
+        margin-top: 9px;
+        padding: 2px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        display: inline-flex;
+        gap: 2px;
+        background: rgba(127, 127, 127, 0.06);
+      }
+
+      .palette-button {
+        height: 24px;
+        padding: 0 9px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+
+      .palette-button:hover {
+        color: var(--ink);
+      }
+
+      .palette-button[aria-pressed="true"] {
+        background: var(--gold-soft);
+        color: var(--bg);
+      }
+
+      .logo-options {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(42px, 1fr));
+        gap: 7px;
+      }
+
+      .logo-option {
+        height: 42px;
+        padding: 0;
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .logo-option[data-favorite="true"]::after {
+        content: "";
+        width: 5px;
+        height: 5px;
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+
+      .logo-option:hover {
+        border-color: var(--line-gold);
+        color: var(--ink);
+      }
+
+      .logo-option[aria-pressed="true"] {
+        border-color: var(--gold);
+        background: var(--gold);
+        color: #111518;
+      }
+
+      .logo-option[aria-pressed="true"]::after {
+        background: #111518;
+      }
+
+      .step-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .step-button {
+        width: 46px;
+        height: 46px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: transparent;
+        color: var(--ink);
+        font-size: 20px;
+      }
+
+      .step-button:hover {
+        border-color: var(--gold);
+        background: rgba(255, 189, 22, 0.08);
+      }
+
+      .is-switching {
+        opacity: 0.28;
+        transform: translate(-50%, -50%) scale(0.965);
+      }
+
+      @media (max-width: 1120px) {
+        .site-nav {
+          display: none;
+        }
+
+        .lab-badge {
+          margin-left: auto;
+        }
+
+        .hero {
+          grid-template-columns: minmax(320px, 0.8fr) minmax(380px, 1fr);
+          gap: 32px;
+        }
+
+        .switcher {
+          grid-template-columns: 220px 1fr auto;
+        }
+
+        .logo-options {
+          grid-template-columns: repeat(6, minmax(38px, 1fr));
+        }
+      }
+
+      @media (max-width: 820px) {
+        .site-header {
+          height: 80px;
+        }
+
+        .brand-lockup {
+          min-width: 0;
+        }
+
+        .brand-thumb {
+          width: 82px;
+          height: 50px;
+          flex-basis: 82px;
+        }
+
+        .lab-badge,
+        .brand-name span:last-child {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 24px;
+          padding-bottom: 178px;
+          grid-template-columns: 1fr;
+          gap: 26px;
+        }
+
+        .brand-stage {
+          min-height: 330px;
+          grid-row: 1;
+        }
+
+        .hero-copy {
+          grid-row: 2;
+        }
+
+        .hero h1 {
+          font-size: clamp(43px, 10vw, 64px);
+        }
+
+        .brand-stage::before {
+          inset: 0;
+          background-position: 0 0, center;
+          background-size: auto, contain;
+          background-repeat: repeat, no-repeat;
+        }
+
+        .specimen-note {
+          display: none;
+        }
+
+        .logo-specimen {
+          width: min(38%, 220px);
+          height: 62%;
+          left: 50%;
+          top: 52%;
+          transform: translate(-50%, -50%);
+        }
+
+        .is-switching {
+          transform: translate(-50%, -50%) scale(0.965);
+        }
+
+        .switcher {
+          width: calc(100% - 24px);
+          bottom: 12px;
+          grid-template-columns: 1fr auto;
+          gap: 12px;
+        }
+
+        .logo-options {
+          grid-column: 1 / -1;
+          grid-row: 2;
+          display: flex;
+          gap: 7px;
+          overflow-x: auto;
+          padding: 2px 0 4px;
+          scrollbar-width: none;
+        }
+
+        .logo-options::-webkit-scrollbar {
+          display: none;
+        }
+
+        .logo-option {
+          flex: 0 0 46px;
+        }
+
+        .current-note {
+          display: none;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .header-inner {
+          padding-inline: 16px;
+        }
+
+        .brand-name {
+          font-size: 11px;
+        }
+
+        .hero {
+          padding-inline: 18px;
+          padding-bottom: 178px;
+        }
+
+        .hero h1 span {
+          white-space: normal;
+        }
+
+        .hero-description {
+          font-size: 14px;
+        }
+
+        .hero-actions {
+          align-items: stretch;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .brand-stage {
+          min-height: 286px;
+        }
+
+        .logo-specimen {
+          width: 40%;
+          height: 62%;
+        }
+
+        .switcher {
+          padding: 14px;
+        }
+
+        .current-title {
+          max-width: 205px;
+        }
+
+        .step-button {
+          width: 42px;
+          height: 42px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="header-inner">
+          <a class="brand-lockup" href="../" aria-label="СКАЙСИНТ ИНЖИНИРИНГ — вернуться на основной сайт">
+            <span class="brand-thumb">
+              <img id="header-logo" src="../brand/sks-logo-for-dark-bg.svg" alt="" />
+            </span>
+            <span class="brand-name">
+              <span>СКАЙСИНТ</span>
+              <span>ИНЖИНИРИНГ</span>
+            </span>
+          </a>
+
+          <nav class="site-nav" aria-label="Пример основной навигации">
+            <span>Компетенции</span>
+            <span>Разработки</span>
+            <span>Процесс</span>
+            <span>Контакты</span>
+          </nav>
+
+          <span class="lab-badge">Тест логотипа</span>
+          <button class="theme-button" id="theme-button" type="button" aria-label="Переключить фон" title="Сравнить на светлом и тёмном фоне">◐</button>
+        </div>
+      </header>
+
+      <main class="hero">
+        <section class="hero-copy" aria-labelledby="hero-title">
+          <p class="eyebrow" id="hero-kicker">Примерка логотипа · вариант 59</p>
+          <h1 id="hero-title">
+            <span>Электроника</span>
+            <span>для БПЛА</span>
+            <span>от схемы до серии</span>
+          </h1>
+          <p class="hero-description">
+            Проектируем полётные контроллеры, ESC, видеопередатчики и каналы связи. Разрабатываем печатные платы, встраиваемое ПО и документацию по ЕСКД.
+          </p>
+          <div class="hero-actions" aria-hidden="true">
+            <button class="primary-action" type="button" tabindex="-1">Обсудить задачу</button>
+            <button class="text-action" type="button" tabindex="-1">Смотреть разработки</button>
+          </div>
+        </section>
+
+        <section class="brand-stage" aria-label="Крупное размещение выбранного логотипа">
+          <div class="logo-specimen" id="logo-specimen">
+            <img id="hero-logo" src="../brand/sks-logo-for-dark-bg.svg" alt="Логотип SKS, вариант 59" />
+          </div>
+          <p class="specimen-note">Финальный вектор · прозрачный фон</p>
+        </section>
+      </main>
+
+      <section class="switcher" aria-label="Переключатель вариантов логотипа">
+        <div class="current-meta" aria-live="polite">
+          <div class="current-kicker" id="current-status">Финалист</div>
+          <p class="current-title" id="current-title">№59 · Гибкий контур SKS</p>
+          <p class="current-note" id="current-note">Скруглённая K с непрерывной медной дорожкой</p>
+          <div class="palette-toggle" role="group" aria-label="Цветовая версия логотипов">
+            <button class="palette-button" type="button" data-palette="champagne" aria-pressed="true">Шампань</button>
+            <button class="palette-button" type="button" data-palette="yellow" aria-pressed="false">Жёлтый</button>
+          </div>
+        </div>
+
+        <div class="logo-options" id="logo-options"></div>
+
+        <div class="step-controls">
+          <button class="step-button" id="previous-logo" type="button" aria-label="Предыдущий логотип">←</button>
+          <button class="step-button" id="next-logo" type="button" aria-label="Следующий логотип">→</button>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const logos = [
+        { id: "59", title: "Гибкий контур SKS", status: "Финалист", note: "Скруглённая K с непрерывной медной дорожкой" },
+        { id: "01.4A", title: "Угловая S", status: "Новая примерка", note: "Строгая геометрия на основе первого направления" },
+        { id: "28", title: "Octagonal S", status: "В шорт-листе", note: "Сильная форма букв и чистый технический характер" },
+        { id: "72", title: "Чистая компактная плата", status: "Новая примерка", note: "Почти квадратная форма без тонких дорожек" },
+        { id: "74", title: "FPV-плата · 6 + 6 контактов", status: "Новая примерка", note: "По шесть компактных контактных площадок сверху и снизу" },
+      ];
+
+      const shortlistIds = new Set(logos.map((logo) => logo.id));
+      const options = document.querySelector("#logo-options");
+      const headerLogo = document.querySelector("#header-logo");
+      const heroLogo = document.querySelector("#hero-logo");
+      const specimen = document.querySelector("#logo-specimen");
+      const kicker = document.querySelector("#hero-kicker");
+      const currentStatus = document.querySelector("#current-status");
+      const currentTitle = document.querySelector("#current-title");
+      const currentNote = document.querySelector("#current-note");
+      const themeButton = document.querySelector("#theme-button");
+      const requestedIndex = logos.findIndex((item) => item.id === location.hash.slice(1));
+      let currentIndex = requestedIndex >= 0 ? requestedIndex : 0;
+      let paletteMode = "champagne";
+      let selectionToken = 0;
+      const transparentLogoCache = new Map();
+      const nativeTransparentIds = new Set(["01.4A", "59", "61"]);
+      const alwaysTransparentIds = new Set(["59", "72", "74"]);
+      const lightThemeLogoIds = new Set(["01.4A", "59"]);
+      const champagnePaletteIds = {
+        "01.4A": "64",
+        "28": "65",
+        "33": "66",
+        "40": "67",
+        "61": "68",
+      };
+      const paletteButtons = [...document.querySelectorAll(".palette-button")];
+
+      function originalImagePath(id) {
+        if (id === "59") {
+          return document.documentElement.dataset.theme === "light"
+            ? "../brand/sks-logo-for-light-bg.svg"
+            : "../brand/sks-logo-for-dark-bg.svg";
+        }
+        if (paletteMode === "champagne" && champagnePaletteIds[id]) {
+          return `../assets/logo-lab/palette/${champagnePaletteIds[id]}.png`;
+        }
+        const themeSuffix = document.documentElement.dataset.theme === "light" && lightThemeLogoIds.has(id) ? "-light" : "";
+        return `../assets/logo-lab/${id}${themeSuffix}.png`;
+      }
+
+      function isBrightNeutral(data, pixelIndex) {
+        const offset = pixelIndex * 4;
+        const red = data[offset];
+        const green = data[offset + 1];
+        const blue = data[offset + 2];
+        const brightest = Math.max(red, green, blue);
+        const darkest = Math.min(red, green, blue);
+        const luminance = red * 0.299 + green * 0.587 + blue * 0.114;
+        return luminance > 210 && brightest - darkest < 48;
+      }
+
+      async function removeImageBackdrop(path) {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`Не удалось загрузить ${path}`);
+
+        const bitmap = await createImageBitmap(await response.blob());
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        context.drawImage(bitmap, 0, 0);
+        bitmap.close();
+
+        const image = context.getImageData(0, 0, canvas.width, canvas.height);
+        const { data } = image;
+        const width = canvas.width;
+        const height = canvas.height;
+        const total = width * height;
+        const transparent = new Uint8Array(total);
+        const visited = new Uint8Array(total);
+        const queue = new Int32Array(total);
+
+        const flood = (seeds, targetMask, collect = false) => {
+          let head = 0;
+          let tail = 0;
+          const pixels = collect ? [] : null;
+          seeds.forEach((pixel) => {
+            if (pixel < 0 || pixel >= total || targetMask[pixel] || !isBrightNeutral(data, pixel)) return;
+            targetMask[pixel] = 1;
+            queue[tail++] = pixel;
+          });
+
+          while (head < tail) {
+            const pixel = queue[head++];
+            if (pixels) pixels.push(pixel);
+            const x = pixel % width;
+            const neighbours = [pixel - width, pixel + width];
+            if (x > 0) neighbours.push(pixel - 1);
+            if (x < width - 1) neighbours.push(pixel + 1);
+            neighbours.forEach((next) => {
+              if (next < 0 || next >= total || targetMask[next] || transparent[next] || !isBrightNeutral(data, next)) return;
+              targetMask[next] = 1;
+              queue[tail++] = next;
+            });
+          }
+          return pixels;
+        };
+
+        const edgeSeeds = [];
+        for (let x = 0; x < width; x += 1) edgeSeeds.push(x, (height - 1) * width + x);
+        for (let y = 1; y < height - 1; y += 1) edgeSeeds.push(y * width, y * width + width - 1);
+        flood(edgeSeeds, transparent);
+
+        for (let start = 0; start < total; start += 1) {
+          if (transparent[start] || visited[start] || !isBrightNeutral(data, start)) continue;
+          const pixels = flood([start], visited, true);
+          if (!pixels.length) continue;
+
+          let minX = width;
+          let maxX = 0;
+          let minY = height;
+          let maxY = 0;
+          pixels.forEach((pixel) => {
+            const x = pixel % width;
+            const y = Math.floor(pixel / width);
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          });
+
+          const boxWidth = maxX - minX + 1;
+          const boxHeight = maxY - minY + 1;
+          const aspect = boxWidth / boxHeight;
+          const fill = pixels.length / (boxWidth * boxHeight);
+          if (pixels.length > 420 && aspect > 0.62 && aspect < 1.62 && fill > 0.46) {
+            pixels.forEach((pixel) => { transparent[pixel] = 1; });
+          }
+        }
+
+        for (let pixel = 0; pixel < total; pixel += 1) {
+          if (transparent[pixel]) data[pixel * 4 + 3] = 0;
+        }
+
+        context.putImageData(image, 0, 0);
+        return new Promise((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error("Не удалось подготовить прозрачный PNG"));
+              return;
+            }
+            resolve(URL.createObjectURL(blob));
+          }, "image/png");
+        });
+      }
+
+      function transparentImagePath(id) {
+        const theme = document.documentElement.dataset.theme;
+        const cacheKey = `${id}:${paletteMode}:${theme}`;
+        const usesNativeTransparency = alwaysTransparentIds.has(id) || (paletteMode === "yellow" && nativeTransparentIds.has(id));
+        if (usesNativeTransparency) return Promise.resolve(originalImagePath(id));
+        if (!transparentLogoCache.has(cacheKey)) {
+          transparentLogoCache.set(cacheKey, removeImageBackdrop(originalImagePath(id)));
+        }
+        return transparentLogoCache.get(cacheKey);
+      }
+
+      function renderButtons() {
+        options.innerHTML = "";
+        logos.forEach((logo, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "logo-option";
+          button.textContent = logo.id;
+          button.dataset.favorite = String(shortlistIds.has(logo.id));
+          button.setAttribute("aria-label", `Показать логотип ${logo.id}: ${logo.title}`);
+          button.setAttribute("aria-pressed", String(index === currentIndex));
+          button.addEventListener("click", () => selectLogo(index));
+          options.append(button);
+        });
+      }
+
+      async function selectLogo(index, immediate = false) {
+        const token = ++selectionToken;
+        currentIndex = (index + logos.length) % logos.length;
+        const logo = logos[currentIndex];
+        const apply = async () => {
+          let source = originalImagePath(logo.id);
+          try {
+            source = await transparentImagePath(logo.id);
+          } catch (error) {
+            transparentLogoCache.delete(logo.id);
+          }
+          if (token !== selectionToken) return;
+          headerLogo.src = source;
+          heroLogo.src = source;
+          heroLogo.alt = `Логотип SKS, вариант ${logo.id}`;
+          kicker.textContent = `Примерка логотипа · вариант ${logo.id}`;
+          currentStatus.textContent = logo.status;
+          currentTitle.textContent = `№${logo.id} · ${logo.title}`;
+          currentNote.textContent = logo.note;
+          document.querySelectorAll(".logo-option").forEach((button, buttonIndex) => {
+            button.setAttribute("aria-pressed", String(buttonIndex === currentIndex));
+          });
+          const activeButton = document.querySelectorAll(".logo-option")[currentIndex];
+          if (activeButton && options.scrollWidth > options.clientWidth) {
+            options.scrollTo({
+              left: activeButton.offsetLeft - (options.clientWidth - activeButton.offsetWidth) / 2,
+              behavior: immediate ? "auto" : "smooth",
+            });
+          }
+          history.replaceState(null, "", `#${logo.id}`);
+          requestAnimationFrame(() => specimen.classList.remove("is-switching"));
+        };
+
+        if (immediate) {
+          void apply();
+          return;
+        }
+
+        specimen.classList.add("is-switching");
+        window.setTimeout(() => void apply(), 120);
+      }
+
+      document.querySelector("#previous-logo").addEventListener("click", () => selectLogo(currentIndex - 1));
+      document.querySelector("#next-logo").addEventListener("click", () => selectLogo(currentIndex + 1));
+
+      paletteButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const nextPalette = button.dataset.palette;
+          if (nextPalette === paletteMode) return;
+          paletteMode = nextPalette;
+          paletteButtons.forEach((item) => item.setAttribute("aria-pressed", String(item.dataset.palette === paletteMode)));
+          selectLogo(currentIndex, true);
+        });
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") selectLogo(currentIndex - 1);
+        if (event.key === "ArrowRight") selectLogo(currentIndex + 1);
+      });
+
+      themeButton.addEventListener("click", () => {
+        const root = document.documentElement;
+        const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+        root.dataset.theme = nextTheme;
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", nextTheme === "dark" ? "#080b0d" : "#f4f3ef");
+        const selectedLogo = logos[currentIndex];
+        void transparentImagePath(selectedLogo.id).then((source) => {
+          if (logos[currentIndex].id !== selectedLogo.id) return;
+          headerLogo.src = source;
+          heroLogo.src = source;
+        });
+      });
+
+      renderButtons();
+      selectLogo(currentIndex, true);
+
+      const warmCache = () => logos.forEach((logo) => void transparentImagePath(logo.id).catch(() => {}));
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(warmCache, { timeout: 1800 });
+      } else {
+        window.setTimeout(warmCache, 900);
+      }
+    </script>
+  </body>
+</html>

@@ -5,35 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="СКАЙСИНТ ИНЖИНИРИНГ. Разработка бортовой электроники для БПЛА, печатных плат, встраиваемого ПО и документации по ЕСКД."
+      content="СКАЙСИНТ ИНЖИНИРИНГ. Разработка программно-аппаратных комплексов: схемотехника, топология печатных плат, встраиваемое ПО, документация по ЕСКД, реверс-инжиниринг."
     />
+    <link rel="icon" href="%BASE_URL%brand/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="icon"
+      href="%BASE_URL%brand/favicon-32x32.png"
+      type="image/png"
+      sizes="32x32"
+    />
+    <link
+      rel="icon"
+      href="%BASE_URL%brand/favicon-16x16.png"
+      type="image/png"
+      sizes="16x16"
+    />
+    <link rel="shortcut icon" href="%BASE_URL%brand/favicon.ico" />
+    <link rel="apple-touch-icon" href="%BASE_URL%brand/apple-touch-icon.png" />
+    <link rel="manifest" href="%BASE_URL%brand/site.webmanifest" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ru_RU" />
     <meta
       property="og:title"
-      content="СКАЙСИНТ ИНЖИНИРИНГ. Электроника для БПЛА"
+      content="СКАЙСИНТ ИНЖИНИРИНГ. Программно-аппаратные комплексы"
     />
     <meta
       property="og:description"
-      content="Полётные контроллеры, ESC, видеопередатчики, каналы связи и печатные платы."
+      content="Схемотехника, топология печатных плат, встраиваемое ПО, испытания, ЕСКД и Gerber. Специализация — бортовая электроника для БПЛА и высокочастотные тракты."
     />
     <meta property="og:image" content="%BASE_URL%og.png" />
     <meta
       property="og:image:alt"
-      content="СКАЙСИНТ ИНЖИНИРИНГ. Электроника для БПЛА"
+      content="СКАЙСИНТ ИНЖИНИРИНГ. Разработка электроники"
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:title"
-      content="СКАЙСИНТ ИНЖИНИРИНГ. Электроника для БПЛА"
+      content="СКАЙСИНТ ИНЖИНИРИНГ. Программно-аппаратные комплексы"
     />
     <meta
       name="twitter:description"
-      content="Полётные контроллеры, ESC, видеопередатчики, каналы связи и печатные платы."
+      content="Схемотехника, топология печатных плат, встраиваемое ПО, испытания, ЕСКД и Gerber."
     />
     <meta name="twitter:image" content="%BASE_URL%og.png" />
-    <meta name="theme-color" content="#080b0d" />
-    <title>СКАЙСИНТ ИНЖИНИРИНГ. Электроника для БПЛА</title>
+    <meta name="theme-color" content="#08090a" />
+    <link rel="canonical" href="https://skysinth.com/" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "ООО «СКАЙСИНТ ИНЖИНИРИНГ»",
+        "alternateName": "СКС",
+        "url": "https://skysinth.com/",
+        "logo": "https://skysinth.com/brand/sks-logo-for-dark-bg.svg",
+        "email": "info@skysinth.com",
+        "taxID": "7811807479",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Санкт-Петербург",
+          "addressCountry": "RU"
+        },
+        "description": "Разработка программно-аппаратных комплексов: схемотехника, топология печатных плат, встраиваемое ПО, документация по ЕСКД, реверс-инжиниринг.",
+        "knowsAbout": [
+          "Проектирование печатных плат",
+          "Высокочастотные узлы и тракты",
+          "Бортовая электроника для БПЛА",
+          "Встраиваемое программное обеспечение",
+          "Конструкторская документация по ЕСКД",
+          "Реверс-инжиниринг электроники"
+        ]
+      }
+    </script>
+    <title>СКАЙСИНТ ИНЖИНИРИНГ. Разработка программно-аппаратных комплексов</title>
     <script>
       try {
         const savedTheme =
@@ -45,7 +88,7 @@
           .querySelector('meta[name="theme-color"]')
           ?.setAttribute(
             "content",
-            savedTheme === "light" ? "#f4f3ef" : "#080b0d",
+            savedTheme === "light" ? "#f3f0ea" : "#08090a",
           );
       } catch {
         document.documentElement.dataset.theme = "dark";

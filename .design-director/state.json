@@ -1,0 +1,30 @@
+{
+  "version": 5,
+  "project_title": "SKYSYNTH — immersive 3D system rethink",
+  "project_root": "/Users/makaroshckamail.ru/Downloads/claude/скс/site",
+  "current_stage": "site-model-selection",
+  "status": "awaiting_user",
+  "note": "Source review indicates B2B engineering landing with development showcase and inquiry flow; commerce remains unconfirmed and requires client answers before any catalog/cart decision.",
+  "created_at": "2026-08-12T14:17:28+00:00",
+  "updated_at": "2026-08-12T14:33:47+00:00",
+  "history": [
+    {
+      "at": "2026-08-12T14:17:28+00:00",
+      "stage": "intake",
+      "status": "in_progress",
+      "note": "State initialized"
+    },
+    {
+      "at": "2026-08-12T14:17:28+00:00",
+      "stage": "experience-selection",
+      "status": "awaiting_user",
+      "note": "Three distinct 3D interaction systems prepared after competitor and adjacent-reference research; awaiting selection before visual comps or code."
+    },
+    {
+      "at": "2026-08-12T14:33:47+00:00",
+      "stage": "site-model-selection",
+      "status": "awaiting_user",
+      "note": "Source review indicates B2B engineering landing with development showcase and inquiry flow; commerce remains unconfirmed and requires client answers before any catalog/cart decision."
+    }
+  ]
+}
