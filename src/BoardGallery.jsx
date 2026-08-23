@@ -50,6 +50,7 @@ export function BoardGallery({
   const live = show3D && modelReady;
   const transitionReady = !show3D || modelReady;
   const drifting = stageVisible && !reducedMotion;
+  const loadedModelCount = readyModels.size;
   const progressivePreloadBoards = useMemo(() => {
     if (!modelReady) return [];
     if (!isCompact) return boards;
@@ -363,10 +364,12 @@ export function BoardGallery({
           {isCompact ? "Проведите по плате" : "Плату можно вращать во все стороны"}
         </p>
 
-        {show3D && (!modelReady || pendingMove) ? (
+        {show3D && (loadedModelCount < boards.length || pendingMove) ? (
           <p className="board-selector-loading" role="status" aria-live="polite">
             <span aria-hidden="true" />
-            {modelReady ? "Готовим следующую плату" : "Загружаем 3D"}
+            {pendingMove
+              ? "Готовим следующую плату"
+              : `Загружаем 3D · ${loadedModelCount}/${boards.length}`}
           </p>
         ) : null}
 

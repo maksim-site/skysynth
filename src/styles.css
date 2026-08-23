@@ -8293,4 +8293,25 @@ body.site-loading {
     padding-inline: 21px;
     font-size: 14px;
   }
+
+  .board-selector-loading {
+    right: auto;
+    bottom: 58px;
+    left: 50%;
+    display: flex;
+    width: max-content;
+    max-width: calc(100% - 36px);
+    padding: 8px 12px;
+    border: 1px solid rgba(215, 189, 120, 0.22);
+    border-radius: 999px;
+    background: rgba(7, 9, 10, 0.68);
+    color: rgba(242, 239, 232, 0.72);
+    backdrop-filter: blur(10px);
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  :root[data-theme="light"] .board-selector-loading {
+    background: rgba(232, 233, 229, 0.78);
+  }
 }
