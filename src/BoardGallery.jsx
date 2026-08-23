@@ -21,7 +21,7 @@ export function BoardGallery({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const inView = true;
-  const [modelReady, setModelReady] = useState(false);
+  const [readyModel, setReadyModel] = useState(null);
   const [stageVisible, setStageVisible] = useState(false);
   const [videoPrimed, setVideoPrimed] = useState(theme !== "dark" || !turntableVideo);
   const [motion, setMotion] = useState("idle");
@@ -36,6 +36,7 @@ export function BoardGallery({
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const isCompact = useMediaQuery("(max-width: 900px)");
   const board = boards[activeIndex];
+  const modelReady = readyModel === board.model;
   const show3D = inView && webGLAvailable && Boolean(board.model);
   const live = show3D && modelReady;
   const transitionReady = !show3D || modelReady;
@@ -58,11 +59,30 @@ export function BoardGallery({
 
   useEffect(() => {
     if (!inView || !webGLAvailable) return;
-    // Warm every exact model before the selector reaches the viewport. This
-    // keeps direct dot selections and the 7 -> 1 wrap from flashing a still
-    // while a GLB is decoded.
-    boards.forEach((item) => preloadBoardModel(item.model, dracoPath));
-  }, [boards, dracoPath, inView, webGLAvailable]);
+    preloadBoardModel(board.model, dracoPath);
+  }, [board.model, dracoPath, inView, webGLAvailable]);
+
+  useEffect(() => {
+    if (!inView || !webGLAvailable || !modelReady) return undefined;
+
+    if (!isCompact) {
+      boards.forEach((item) => preloadBoardModel(item.model, dracoPath));
+      return undefined;
+    }
+
+    const neighbours = [
+      boards[(activeIndex + 1) % boards.length],
+      boards[(activeIndex - 1 + boards.length) % boards.length],
+    ];
+    const timers = neighbours.map((item, index) =>
+      window.setTimeout(
+        () => preloadBoardModel(item.model, dracoPath),
+        1200 + index * 1800,
+      ),
+    );
+
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [activeIndex, boards, dracoPath, inView, isCompact, modelReady, webGLAvailable]);
 
   useEffect(() => {
     // A light-theme visit does not mount the dark transition clip. Prime it
@@ -80,8 +100,8 @@ export function BoardGallery({
     [],
   );
 
-  const handleModelReady = useCallback(() => {
-    setModelReady(true);
+  const handleModelReady = useCallback((model) => {
+    setReadyModel(model);
   }, []);
 
   const primeTurntableVideo = useCallback(() => {
@@ -244,7 +264,7 @@ export function BoardGallery({
                   floating={drifting}
                   onReady={handleModelReady}
                   orbit="free"
-                  preloadBoards={boards}
+                  preloadBoards={isCompact ? undefined : boards}
                   reducedMotion={reducedMotion}
                   theme={theme}
                   // The source platter turns clockwise for the right arrow;

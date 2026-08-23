@@ -631,6 +631,13 @@ h2,
   }
 }
 
+@keyframes hero-enter-mobile {
+  from {
+    opacity: 0;
+    filter: blur(7px);
+  }
+}
+
 /* Sections -------------------------------------------------------------- */
 
 .section {
@@ -7606,6 +7613,7 @@ h2,
     order: initial;
     padding: calc(var(--cap-h) + var(--cap-top) + 48px) var(--pad) 54px;
     background: transparent;
+    animation-name: hero-enter-mobile;
   }
 
   .hero-copy > * {

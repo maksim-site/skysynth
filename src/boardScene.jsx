@@ -116,8 +116,8 @@ function PreparedBoard({ baseRotation = 0.29, board, dracoPath, onReady }) {
   }, [prepared]);
 
   useEffect(() => {
-    onReady?.();
-  }, [onReady, prepared]);
+    onReady?.(board.model);
+  }, [board.model, onReady, prepared]);
 
   return (
     <Center>

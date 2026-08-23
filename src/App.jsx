@@ -148,6 +148,25 @@ function preloadThemeImages(themeName) {
   ].map(preloadThemeImage));
 }
 
+function preloadCriticalFonts() {
+  if (typeof document === "undefined" || !document.fonts?.load) {
+    return Promise.resolve();
+  }
+
+  const faces = [
+    ['300 32px "Unbounded"', "Разработка электроники для сложных устройств"],
+    ['500 32px "Unbounded"', "от идеи до производства"],
+    ['400 16px "Golos Text"', "Проектируем платы и встраиваемое ПО"],
+    ['600 15px "Golos Text"', "Обсудить задачу"],
+  ];
+
+  return Promise.all(
+    faces.map(([font, sample]) =>
+      document.fonts.load(font, sample).catch(() => []),
+    ),
+  );
+}
+
 const DRACO_PATH = assetPath("draco/");
 
 // Every board below comes from the company's own 3D files. Descriptions stay
@@ -405,9 +424,9 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     const minimumDisplayMs = 620;
-    const maximumDisplayMs = 1500;
     const startedAt = performance.now();
     const compactHero = window.matchMedia("(max-width: 620px)").matches;
+    const maximumDisplayMs = compactHero ? 3600 : 2200;
     const narrowHero = window.matchMedia("(max-width: 860px)").matches;
     const currentHero = compactHero
       ? heroMobileScenes[theme]
@@ -420,13 +439,8 @@ export function App() {
     const criticalAssets = Promise.all([
       preloadThemeImage(logoAssets[theme]),
       preloadThemeImage(currentHero),
-      document.fonts?.ready || Promise.resolve(),
-    ]).then(() =>
-      Promise.all([
-        preloadThemeImage(sectionImages.reverse[theme]),
-        preloadThemeImage(sceneAssets.selector[theme]),
-      ]),
-    );
+      preloadCriticalFonts(),
+    ]);
 
     const timeout = new Promise((resolve) => {
       window.setTimeout(resolve, maximumDisplayMs);
@@ -470,6 +484,10 @@ export function App() {
   }, [theme]);
 
   useEffect(() => {
+    // On phones the active 3D board has priority over an alternate theme the
+    // visitor may never request. The toggle already warms that theme on demand.
+    if (window.matchMedia("(max-width: 620px)").matches) return undefined;
+
     const alternateTheme = theme === "dark" ? "light" : "dark";
     const warmAlternateTheme = () => {
       void preloadThemeImages(alternateTheme);
@@ -489,12 +507,19 @@ export function App() {
   useEffect(() => {
     if (!supportsWebGL()) return undefined;
 
+    const compactViewport = window.matchMedia("(max-width: 620px)").matches;
+
     // Warm the selector itself and its first GLB immediately after the initial
     // paint. The remaining boards decode during idle time, before a fast scroll
     // reaches the gallery, so the accepted still never flashes before WebGL.
     void import("./BoardGallery.jsx");
     void import("./BoardCanvas.jsx");
     preloadBoardModel(boards[0]?.model, DRACO_PATH);
+
+    // A phone must finish the first 3.7 MB board before spending bandwidth and
+    // parse time on the other six models. The gallery schedules neighbours
+    // after the active model is actually ready.
+    if (compactViewport) return undefined;
 
     // Decode the remaining GLBs one at a time. Starting all six together made
     // the main thread hitch on slower phones even though the gallery itself is
