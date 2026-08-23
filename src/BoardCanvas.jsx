@@ -1,4 +1,5 @@
 import { Canvas } from "@react-three/fiber";
+import { PCFShadowMap } from "three";
 import { BoardScene } from "./boardScene.jsx";
 
 /**
@@ -16,12 +17,14 @@ export function BoardCanvas({
   orbit,
   reducedMotion,
   theme,
+  transitionDirection,
+  transitionMotion,
 }) {
   return (
     <Canvas
       camera={{ position: [0, 0.05, cameraZ], fov: 32, near: 0.1, far: 40 }}
       dpr={compact ? [1, 1.5] : [1, 1.65]}
-      shadows
+      shadows={{ type: PCFShadowMap }}
       gl={{
         alpha: true,
         antialias: true,
@@ -37,6 +40,8 @@ export function BoardCanvas({
         orbit={orbit}
         reducedMotion={reducedMotion}
         theme={theme}
+        transitionDirection={transitionDirection}
+        transitionMotion={transitionMotion}
       />
     </Canvas>
   );

@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import {
   AdaptiveDpr,
@@ -110,19 +110,51 @@ function PreparedBoard({ baseRotation = 0.29, board, dracoPath, onReady }) {
   );
 }
 
-function IdleBoardMotion({ children, enabled, mode = "stage" }) {
-  const groupRef = useRef(null);
+const SELECTOR_IDLE_YAW = 0.105;
 
-  useFrame(({ clock }, delta) => {
+function IdleBoardMotion({
+  children,
+  enabled,
+  mode = "stage",
+  transitionDirection = -1,
+  transitionMotion = "idle",
+}) {
+  const groupRef = useRef(null);
+  const phaseRef = useRef(0);
+  const floatGainRef = useRef(0);
+  const wasEnabledRef = useRef(false);
+  const yawVelocityRef = useRef(-SELECTOR_IDLE_YAW);
+
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    const time = clock.getElapsedTime();
+    if (enabled && !wasEnabledRef.current) {
+      phaseRef.current = 0;
+      floatGainRef.current = 0;
+    }
+    wasEnabledRef.current = enabled;
+
+    if (enabled) phaseRef.current += delta;
+    const gainBlend = 1 - Math.exp(-delta * 2.7);
+    floatGainRef.current = THREE.MathUtils.lerp(
+      floatGainRef.current,
+      enabled ? 1 : 0,
+      gainBlend,
+    );
+
+    const time = phaseRef.current;
+    const gain = floatGainRef.current;
     const blend = 1 - Math.exp(-delta * 3.8);
     const selector = mode === "selector";
-    const targetY = enabled ? Math.sin(time * 0.62) * (selector ? 0.055 : 0.035) : 0;
-    const targetX = enabled ? Math.sin(time * 0.47) * (selector ? 0.018 : 0.008) : 0;
-    const targetZ = enabled && !selector ? Math.sin(time * 0.38 + 0.8) * 0.012 : 0;
-    const targetYaw = enabled && selector ? Math.sin(time * 0.34) * 0.13 : 0;
+    const targetY = enabled
+      ? Math.sin(time * 0.62) * (selector ? 0.055 : 0.035) * gain
+      : 0;
+    const targetX = enabled
+      ? Math.sin(time * 0.47) * (selector ? 0.018 : 0.008) * gain
+      : 0;
+    const targetZ = enabled && !selector
+      ? Math.sin(time * 0.38) * 0.012 * gain
+      : 0;
 
     groupRef.current.position.y = THREE.MathUtils.lerp(
       groupRef.current.position.y,
@@ -134,16 +166,88 @@ function IdleBoardMotion({ children, enabled, mode = "stage" }) {
       targetX,
       blend,
     );
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(
-      groupRef.current.rotation.y,
-      targetYaw,
-      blend,
-    );
+    if (selector) {
+      if (enabled) {
+        // The slow base turn never stops under the speed ramp. For the reverse
+        // arrow it follows that direction during the fast turn, then eases back
+        // to the gallery's normal clockwise drift during the dissolve.
+        const targetYawVelocity =
+          transitionMotion === "spin"
+            ? transitionDirection * SELECTOR_IDLE_YAW
+            : -SELECTOR_IDLE_YAW;
+        const yawBlend = 1 - Math.exp(-delta * (transitionMotion === "spin" ? 9 : 4.2));
+        yawVelocityRef.current = THREE.MathUtils.lerp(
+          yawVelocityRef.current,
+          targetYawVelocity,
+          yawBlend,
+        );
+        groupRef.current.rotation.y += yawVelocityRef.current * delta;
+      }
+    } else {
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        0,
+        blend,
+      );
+    }
     groupRef.current.rotation.z = THREE.MathUtils.lerp(
       groupRef.current.rotation.z,
       targetZ,
       blend,
     );
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+}
+
+function TransitionSpinMotion({ children, direction = 1, motion = "idle" }) {
+  const groupRef = useRef(null);
+  const elapsedRef = useRef(0);
+
+  useLayoutEffect(() => {
+    elapsedRef.current = 0;
+    if (motion !== "spin" && groupRef.current) {
+      // A completed 360° turn is visually identical to zero. Normalise before
+      // the next frame so the idle drift never winds the board backwards.
+      groupRef.current.rotation.y = 0;
+    }
+  }, [direction, motion]);
+
+  useFrame((_, delta) => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    // Keep transition time tied to wall-clock time. Capping a long frame here
+    // made a model decode look like a tiny pause followed by resumed motion.
+    elapsedRef.current += delta;
+
+    if (motion === "spin") {
+      // Finish the fast relative turn shortly before the 1.1 s baked clip.
+      // The independent slow yaw keeps moving underneath, so the board reaches
+      // idle speed instead of stopping and restarting at the hand-off.
+      const progress = Math.min(elapsedRef.current / 1.04, 1);
+      // Smootherstep has zero velocity and zero acceleration at both ends.
+      // Feeding that same curve into the lift envelope removes the final
+      // downward kick that a linear sine envelope produced.
+      const eased = progress ** 3 * (progress * (progress * 6 - 15) + 10);
+      const velocityWindow = Math.sin(Math.PI * eased);
+
+      // One continuous 360° turn. The gallery swaps models at the first
+      // edge-on quarter-turn, under the fastest part of the baked blur ramp,
+      // without resetting this parent transform.
+      group.rotation.y = direction * Math.PI * 2 * eased;
+      group.rotation.z = direction * 0.032 * velocityWindow;
+      group.position.y = 0.045 * velocityWindow;
+      group.scale.setScalar(1 - 0.018 * velocityWindow ** 2);
+      return;
+    }
+
+    const blend = 1 - Math.exp(-delta * 14);
+    group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, 0, blend);
+    group.rotation.z = THREE.MathUtils.lerp(group.rotation.z, 0, blend);
+    group.position.y = THREE.MathUtils.lerp(group.position.y, 0, blend);
+    const scale = THREE.MathUtils.lerp(group.scale.x, 1, blend);
+    group.scale.setScalar(scale);
   });
 
   return <group ref={groupRef}>{children}</group>;
@@ -189,15 +293,32 @@ export function BoardScene({
   orbit = "stage",
   reducedMotion,
   theme,
+  transitionDirection = 1,
+  transitionMotion = "idle",
 }) {
   const controlsRef = useRef(null);
+  const previousModelRef = useRef(board.model);
+  const previousTransitionMotionRef = useRef(transitionMotion);
   const isDark = theme === "dark";
   const limits = orbitPresets[orbit] || orbitPresets.stage;
 
-  // Every board opens from the same angle, however the previous one was left.
-  useEffect(() => {
-    controlsRef.current?.reset();
-  }, [board.model]);
+  useLayoutEffect(() => {
+    const modelChanged = previousModelRef.current !== board.model;
+    const transitionStarted =
+      previousTransitionMotionRef.current === "idle" &&
+      transitionMotion === "spin";
+
+    previousModelRef.current = board.model;
+    previousTransitionMotionRef.current = transitionMotion;
+
+    // Canonicalise the camera before the speed ramp starts, not when the GLB is
+    // swapped halfway through it. That keeps left/right transitions independent
+    // of the angle at which the visitor left the current board and avoids a
+    // visible camera jump at peak motion.
+    if (transitionStarted || (modelChanged && transitionMotion === "idle")) {
+      controlsRef.current?.reset();
+    }
+  }, [board.model, transitionMotion]);
   // The selector sits inside a photographed lab. Keep its render close to the
   // subdued practical light in that image, so it does not read as a pasted cutout.
   const boost = orbit === "free" ? 1.34 : orbit === "selector" ? 1.5 : 1;
@@ -248,30 +369,38 @@ export function BoardScene({
         />
       </Environment>
 
-      <IdleBoardMotion
-        enabled={floating && !reducedMotion}
-        mode={orbit === "stage" ? "stage" : "selector"}
+      <TransitionSpinMotion
+        direction={transitionDirection}
+        motion={transitionMotion}
       >
-        <Suspense fallback={null}>
-          <PreparedBoard
-            key={board.model}
-            baseRotation={
-              Number.isFinite(board.baseRotation)
-                ? board.baseRotation
-                : orbit === "stage"
-                  ? 0.29
-                  : 0
-            }
-            board={board}
-            dracoPath={dracoPath}
-            onReady={onReady}
-          />
-        </Suspense>
-      </IdleBoardMotion>
+        <IdleBoardMotion
+          enabled={floating && !reducedMotion}
+          mode={orbit === "stage" ? "stage" : "selector"}
+          transitionDirection={transitionDirection}
+          transitionMotion={transitionMotion}
+        >
+          <Suspense fallback={null}>
+            <PreparedBoard
+              key={board.model}
+              baseRotation={
+                Number.isFinite(board.baseRotation)
+                  ? board.baseRotation
+                  : orbit === "stage"
+                    ? 0.29
+                    : 0
+              }
+              board={board}
+              dracoPath={dracoPath}
+              onReady={onReady}
+            />
+          </Suspense>
+        </IdleBoardMotion>
+      </TransitionSpinMotion>
 
       <OrbitControls
         ref={controlsRef}
         makeDefault
+        enabled={transitionMotion === "idle"}
         autoRotate={orbit === "stage" ? Boolean(autoRotate) : false}
         autoRotateSpeed={0.55}
         enablePan={false}

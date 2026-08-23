@@ -12,6 +12,7 @@ import {
 import { useCookieChoice, useMetrika, useReveal, useScrolled } from "./useReveal.js";
 import { ProcessFlow } from "./ProcessFlow.jsx";
 import { Faq } from "./Faq.jsx";
+import { preloadBoardModel, supportsWebGL } from "./media.js";
 
 const HeroBoardExperience = lazy(() =>
   import("./HeroBoardExperience").then((module) => ({
@@ -82,13 +83,15 @@ const sectionImages = {
 const sceneAssets = {
   selector: {
     dark: assetPath("assets/images/sections/selector-levitation-lab.webp"),
-    light: assetPath("assets/images/sections/selector-indexing-lab-light-v1.webp"),
+    light: assetPath("assets/images/sections/selector-indexing-lab-light-v3.webp"),
   },
   contactPanorama: {
     dark: assetPath("assets/images/sections/contact-panorama-boards-final.png"),
     light: assetPath("assets/images/sections/contact-panorama-boards-light-v2.webp"),
   },
 };
+
+const DRACO_PATH = assetPath("draco/");
 
 // Every board below comes from the company's own 3D files. Descriptions stay
 // inside what the client documented, and the AKYMA receiver is left out on
@@ -159,9 +162,10 @@ const boards = [
     title: "STM32F446RET6",
     text: "Контроллер управления сервоприводами: формирует управляющие сигналы и питает подключённые приводы.",
     facts: ["Управляющие сигналы", "Питание приводов", "Силовая часть на плате"],
-    model: null,
+    model: assetPath("assets/models/stm32f446ret6.glb"),
     image: assetPath("assets/images/boards/servo-controller-transparent.webp"),
     alt: "3D-рендер контроллера управления сервоприводами",
+    sceneScale: 3.1,
   },
 ];
 
@@ -405,6 +409,29 @@ export function App() {
       // The theme still works for the current session when storage is blocked.
     }
   }, [theme]);
+
+  useEffect(() => {
+    if (!supportsWebGL()) return undefined;
+
+    // Warm the selector itself and its first GLB immediately after the initial
+    // paint. The remaining boards decode during idle time, before a fast scroll
+    // reaches the gallery, so the accepted still never flashes before WebGL.
+    void import("./BoardGallery.jsx");
+    void import("./BoardCanvas.jsx");
+    preloadBoardModel(boards[0]?.model, DRACO_PATH);
+
+    const warmRemaining = () => {
+      boards.slice(1).forEach((item) => preloadBoardModel(item.model, DRACO_PATH));
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(warmRemaining, { timeout: 900 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timerId = window.setTimeout(warmRemaining, 180);
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -718,9 +745,10 @@ export function App() {
           >
             <BoardGallery
               boards={boards}
-              dracoPath={assetPath("draco/")}
+              dracoPath={DRACO_PATH}
               selectorBackground={sceneAssets.selector[theme]}
               theme={theme}
+              turntableVideo={assetPath("assets/video/gallery-turntables-right-ramp-v2.mp4")}
             />
           </Suspense>
         </section>
@@ -853,7 +881,11 @@ export function App() {
                 <input type="checkbox" name="consent" required />
                 <span>
                   Согласен на обработку персональных данных в соответствии с{" "}
-                  <a href={assetPath("privacy.html")} target="_blank" rel="noreferrer">
+                  <a
+                    href={assetPath("privacy.html#form-data")}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     политикой конфиденциальности
                   </a>
                   .
@@ -885,18 +917,20 @@ export function App() {
         <div className="cookie-bar" role="dialog" aria-label="Использование cookie">
           <div className="cookie-text">
             <p>
-              Мы используем cookie и сервис статистики, чтобы видеть, как
-              посетители пользуются сайтом. Без согласия статистика не
-              собирается.
+              После вашего согласия сайт может загрузить Яндекс.Метрику для
+              обезличенной статистики посещений. Без согласия счётчик не
+              загружается.
             </p>
-            <a href={assetPath("privacy.html")}>Политика конфиденциальности</a>
+            <a href={assetPath("privacy.html#cookies")}>
+              Как используются cookie и Метрика
+            </a>
           </div>
           <div className="cookie-actions">
             <button type="button" className="cookie-decline" onClick={cookies.decline}>
-              Отклонить
+              Только необходимые
             </button>
             <button type="button" className="cookie-accept" onClick={cookies.accept}>
-              Принять
+              Разрешить статистику
             </button>
           </div>
         </div>
@@ -936,6 +970,11 @@ export function App() {
             <p>Санкт-Петербург</p>
             <p>
               <a href={assetPath("privacy.html")}>Политика конфиденциальности</a>
+            </p>
+            <p>
+              <a href={assetPath("privacy.html#cookies")}>
+                Cookie и статистика посещений
+              </a>
             </p>
           </div>
         </div>

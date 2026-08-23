@@ -7176,3 +7176,115 @@ h2,
     transition: opacity 140ms linear;
   }
 }
+
+/* Speed-ramp experiment: reveal only the baked rotating centre platter, keep
+   the accepted one-stand photograph underneath, and spin the exact live GLB
+   through the same beat. The model swaps edge-on and is never morphed. */
+
+.board-selector-transition-video {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  visibility: hidden;
+  filter: brightness(0.55) contrast(0.985) saturate(0.84);
+  /* The 16:9 clip is cover-fitted into a 1280x820 stage while the accepted
+     1586x992 plate is not. 0.895 equalises the foreground platter widths. */
+  transform: translate(0.2%, -0.82%) scale(0.895);
+  transform-origin: 50% 76%;
+  -webkit-mask-image: radial-gradient(ellipse 32% 19% at 50% 80%, #000 0%, rgba(0, 0, 0, 0.98) 42%, rgba(0, 0, 0, 0.78) 60%, rgba(0, 0, 0, 0.34) 79%, transparent 100%);
+  mask-image: radial-gradient(ellipse 32% 19% at 50% 80%, #000 0%, rgba(0, 0, 0, 0.98) 42%, rgba(0, 0, 0, 0.78) 60%, rgba(0, 0, 0, 0.34) 79%, transparent 100%);
+  transition:
+    opacity 520ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s linear 520ms;
+  will-change: opacity;
+  pointer-events: none;
+}
+
+.board-selector-transition-video[data-active="true"] {
+  opacity: 0.9;
+  visibility: visible;
+  transition:
+    opacity 220ms cubic-bezier(0.22, 0.68, 0, 1),
+    visibility 0s linear 0s;
+}
+
+.board-selector-scene {
+  transition:
+    transform 440ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 220ms linear,
+    filter 360ms ease;
+  will-change: transform, opacity, filter;
+}
+
+.board-selector[data-motion="spin-out"] .board-selector-scene {
+  opacity: 0.9;
+  filter: blur(3.2px) saturate(0.84);
+  transform: translate3d(0, -0.5%, 0) scale(0.982);
+  transition:
+    transform 500ms cubic-bezier(0.55, 0, 0.9, 0.35),
+    opacity 390ms ease 80ms,
+    filter 500ms cubic-bezier(0.55, 0, 0.9, 0.35);
+  pointer-events: none;
+}
+
+.board-selector[data-direction="-1"] .board-selector-transition-video {
+  /* Mirroring also mirrors the source frame's slight optical offset, so the
+     reverse clip needs its own centring correction. */
+  transform: translate(-0.66%, -0.82%) scale(-0.895, 0.895);
+}
+
+.board-selector[data-motion="spin-in"] .board-selector-scene {
+  opacity: 1;
+  filter: none;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition:
+    transform 680ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 420ms ease,
+    filter 680ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.board-selector-dots,
+.board-selector-hint {
+  transition:
+    opacity 260ms ease,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.board-selector[data-motion="spin-out"] .board-selector-dots,
+.board-selector[data-motion="spin-out"] .board-selector-hint {
+  opacity: 0.28;
+  transform: translateY(5px);
+}
+
+.board-selector[data-motion="spin-in"] .board-selector-dots,
+.board-selector[data-motion="spin-in"] .board-selector-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 620px) {
+  .board-selector-transition-video {
+    -webkit-mask-image: radial-gradient(ellipse 54% 19% at 50% 80%, #000 0%, rgba(0, 0, 0, 0.96) 40%, rgba(0, 0, 0, 0.72) 60%, rgba(0, 0, 0, 0.3) 80%, transparent 100%);
+    mask-image: radial-gradient(ellipse 54% 19% at 50% 80%, #000 0%, rgba(0, 0, 0, 0.96) 40%, rgba(0, 0, 0, 0.72) 60%, rgba(0, 0, 0, 0.3) 80%, transparent 100%);
+  }
+}
+
+@media (min-width: 1100px) {
+  .hero-copy > * {
+    max-width: min(47%, 620px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-selector-transition-video {
+    display: none !important;
+  }
+}

@@ -2,8 +2,11 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
 
 const BoardCanvas = lazy(() => import("./BoardCanvas.jsx"));
-const EXIT_TRANSITION_MS = 300;
-const LANDING_TRANSITION_MS = 440;
+const SPIN_TRANSITION_MS = 1100;
+const SPIN_SETTLE_MS = 520;
+// The smootherstep turn reaches its first edge-on quarter-turn at 36%.
+// Swap there, while the board is thinnest and the baked speed ramp is fast.
+const SPIN_SWAP_MS = Math.round(SPIN_TRANSITION_MS * 0.36);
 
 /**
  * Product selector rather than a catalogue: one exact board render floats over
@@ -14,14 +17,19 @@ export function BoardGallery({
   dracoPath,
   selectorBackground,
   theme,
+  turntableVideo,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [inView, setInView] = useState(false);
   const [modelReady, setModelReady] = useState(false);
   const [motion, setMotion] = useState("idle");
+  const [transitionDirection, setTransitionDirection] = useState(1);
   const [webGLAvailable] = useState(supportsWebGL);
   const rootRef = useRef(null);
   const transitionTimer = useRef(null);
+  const settleTimer = useRef(null);
+  const swapTimer = useRef(null);
+  const videoRef = useRef(null);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const isCompact = useMediaQuery("(max-width: 900px)");
   const board = boards[activeIndex];
@@ -41,21 +49,26 @@ export function BoardGallery({
         setInView(true);
         observer.disconnect();
       },
-      { rootMargin: "420px 0px" },
+      { rootMargin: "1400px 0px" },
     );
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    setModelReady(false);
-    const next = boards[(activeIndex + 1) % boards.length];
-    if (webGLAvailable && next.model) preloadBoardModel(next.model, dracoPath);
-  }, [activeIndex, boards, dracoPath, webGLAvailable]);
+    if (!inView || !webGLAvailable) return;
+    // Warm every exact model before the selector reaches the viewport. This
+    // keeps direct dot selections and the 7 -> 1 wrap from flashing a still
+    // while a GLB is decoded.
+    boards.forEach((item) => preloadBoardModel(item.model, dracoPath));
+  }, [boards, dracoPath, inView, webGLAvailable]);
 
   useEffect(
     () => () => {
       window.clearTimeout(transitionTimer.current);
+      window.clearTimeout(settleTimer.current);
+      window.clearTimeout(swapTimer.current);
+      videoRef.current?.pause();
     },
     [],
   );
@@ -71,6 +84,18 @@ export function BoardGallery({
     [dracoPath, webGLAvailable],
   );
 
+  const startTurntableRamp = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || theme !== "dark") return;
+
+    video.pause();
+    video.currentTime = 0;
+    video.playbackRate = 1;
+    video.play().catch(() => {
+      // The exact GLB transition still works if a browser blocks video playback.
+    });
+  }, [theme]);
+
   function moveTo(nextIndex, direction) {
     if (motion !== "idle" || nextIndex === activeIndex) return;
 
@@ -79,20 +104,24 @@ export function BoardGallery({
       return;
     }
 
-    setMotion("exit-up");
-    transitionTimer.current = window.setTimeout(() => {
+    warm3D(boards[nextIndex]?.model);
+    setTransitionDirection(direction >= 0 ? 1 : -1);
+    setMotion("spin-out");
+    startTurntableRamp();
+
+    swapTimer.current = window.setTimeout(() => {
       setActiveIndex(nextIndex);
-      setMotion("enter-up");
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          setMotion("landing");
-          transitionTimer.current = window.setTimeout(
-            () => setMotion("idle"),
-            LANDING_TRANSITION_MS,
-          );
-        });
-      });
-    }, EXIT_TRANSITION_MS);
+      setMotion("spin-in");
+    }, SPIN_SWAP_MS);
+
+    transitionTimer.current = window.setTimeout(() => {
+      setMotion("settle");
+      videoRef.current?.pause();
+    }, SPIN_TRANSITION_MS);
+
+    settleTimer.current = window.setTimeout(() => {
+      setMotion("idle");
+    }, SPIN_TRANSITION_MS + SPIN_SETTLE_MS);
   }
 
   function moveBy(delta) {
@@ -114,6 +143,7 @@ export function BoardGallery({
   return (
     <div
       className="board-selector"
+      data-direction={transitionDirection}
       data-motion={motion}
       ref={rootRef}
       tabIndex="0"
@@ -137,6 +167,21 @@ export function BoardGallery({
           height="992"
           aria-hidden="true"
         />
+        {theme === "dark" && turntableVideo ? (
+          <video
+            ref={videoRef}
+            className="board-selector-transition-video"
+            data-active={
+              motion === "spin-out" || motion === "spin-in" ? "true" : "false"
+            }
+            muted
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+          >
+            <source src={turntableVideo} type="video/mp4" />
+          </video>
+        ) : null}
         <div className="board-selector-vignette" aria-hidden="true" />
 
         <div className="board-selector-scene">
@@ -163,6 +208,17 @@ export function BoardGallery({
                   orbit="free"
                   reducedMotion={reducedMotion}
                   theme={theme}
+                  // The source platter turns clockwise for the right arrow;
+                  // invert the WebGL yaw so its screen-space motion agrees.
+                  transitionDirection={-transitionDirection}
+                  // Keep one uninterrupted 3D phase across the model swap.
+                  transitionMotion={
+                    motion === "idle"
+                      ? "idle"
+                      : motion === "settle"
+                        ? "settle"
+                        : "spin"
+                  }
                 />
               </Suspense>
             </div>
