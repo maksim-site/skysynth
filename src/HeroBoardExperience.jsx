@@ -79,8 +79,10 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
   }
 
   const warm3D = useCallback(() => {
-    if (webGLAvailable) preloadBoardModel(board.model, dracoPath);
-  }, [board.model, dracoPath, webGLAvailable]);
+    if (webGLAvailable && !isCompact) {
+      preloadBoardModel(board.model, dracoPath);
+    }
+  }, [board.model, dracoPath, isCompact, webGLAvailable]);
 
   useEffect(() => {
     if (mode === "lifting" && liftComplete && modelReady) {
@@ -250,7 +252,7 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
   );
 
   function open3D() {
-    if (!webGLAvailable || mode !== "rest") return;
+    if (isCompact || !webGLAvailable || mode !== "rest") return;
     warm3D();
     setMounted3D(true);
     setModelReady(false);
@@ -282,24 +284,36 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
         </picture>
 
         <div className="hero-product-zone" ref={zoneRef}>
-          <button
-            className="hero-board-trigger"
-            ref={triggerRef}
-            type="button"
-            aria-label="Поднять плату и открыть интерактивную 3D-модель"
-            onClick={open3D}
-            onPointerEnter={warm3D}
-            onFocus={warm3D}
-            disabled={mode !== "rest" || !webGLAvailable}
-          >
-            <img
-              ref={imageRef}
-              src={board.image}
-              alt="Реальная плата полётного контроллера"
-              width="1200"
-              height="1200"
-            />
-          </button>
+          {isCompact ? (
+            <div className="hero-board-trigger hero-board-static" ref={triggerRef}>
+              <img
+                ref={imageRef}
+                src={board.image}
+                alt="Реальная плата полётного контроллера"
+                width="1200"
+                height="1200"
+              />
+            </div>
+          ) : (
+            <button
+              className="hero-board-trigger"
+              ref={triggerRef}
+              type="button"
+              aria-label="Поднять плату и открыть интерактивную 3D-модель"
+              onClick={open3D}
+              onPointerEnter={warm3D}
+              onFocus={warm3D}
+              disabled={mode !== "rest" || !webGLAvailable}
+            >
+              <img
+                ref={imageRef}
+                src={board.image}
+                alt="Реальная плата полётного контроллера"
+                width="1200"
+                height="1200"
+              />
+            </button>
+          )}
 
           {mounted3D ? (
             <div
@@ -348,7 +362,7 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
         </div>
       ) : null}
 
-      {mode === "rest" ? (
+      {mode === "rest" && !isCompact ? (
         <p className="hero-3d-note" aria-hidden="true">
           <Rotate3D size={14} strokeWidth={1.7} />
           {webGLAvailable

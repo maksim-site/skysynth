@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Cpu,
   CircuitBoard,
@@ -10,9 +17,8 @@ import {
   Sun,
 } from "lucide-react";
 import { useCookieChoice, useMetrika, useReveal, useScrolled } from "./useReveal.js";
-import { ProcessFlow } from "./ProcessFlow.jsx";
 import { Faq } from "./Faq.jsx";
-import { preloadBoardModel, supportsWebGL } from "./media.js";
+import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
 
 const HeroBoardExperience = lazy(() =>
   import("./HeroBoardExperience").then((module) => ({
@@ -51,7 +57,6 @@ const METRIKA_ID = "";
 const navigation = [
   { label: "Услуги", id: "services" },
   { label: "Разработки", id: "developments" },
-  { label: "Процесс", id: "process" },
   { label: "Контакты", id: "contact" },
 ];
 
@@ -73,6 +78,11 @@ const heroAssets = {
   },
 };
 
+const heroMobileScenes = {
+  dark: assetPath("assets/images/hero-concept-dark.webp"),
+  light: assetPath("assets/images/hero-concept-light.webp"),
+};
+
 const sectionImages = {
   reverse: {
     dark: assetPath("assets/images/sections/reverse-engineering-scene-final.webp"),
@@ -91,6 +101,53 @@ const sceneAssets = {
   },
 };
 
+const themeImagePromises = new Map();
+
+function preloadThemeImage(src) {
+  if (!src || typeof Image === "undefined") return Promise.resolve();
+  if (themeImagePromises.has(src)) return themeImagePromises.get(src);
+
+  const promise = new Promise((resolve) => {
+    const image = new Image();
+    const finish = () => resolve();
+
+    image.decoding = "async";
+    image.onload = () => {
+      if (typeof image.decode === "function") {
+        image.decode().catch(() => undefined).finally(finish);
+      } else {
+        finish();
+      }
+    };
+    // A missing optional image must not leave the theme control locked.
+    image.onerror = finish;
+    image.src = src;
+
+    if (image.complete) {
+      if (typeof image.decode === "function") {
+        image.decode().catch(() => undefined).finally(finish);
+      } else {
+        finish();
+      }
+    }
+  });
+
+  themeImagePromises.set(src, promise);
+  return promise;
+}
+
+function preloadThemeImages(themeName) {
+  return Promise.all([
+    logoAssets[themeName],
+    heroAssets[themeName].desktop,
+    heroAssets[themeName].mobile,
+    heroMobileScenes[themeName],
+    sectionImages.reverse[themeName],
+    sceneAssets.selector[themeName],
+    sceneAssets.contactPanorama[themeName],
+  ].map(preloadThemeImage));
+}
+
 const DRACO_PATH = assetPath("draco/");
 
 // Every board below comes from the company's own 3D files. Descriptions stay
@@ -105,7 +162,7 @@ const boards = [
     model: assetPath("assets/models/flight-controller.glb"),
     image: assetPath("assets/images/boards/flight-controller-transparent.webp"),
     alt: "3D-рендер платы полётного контроллера",
-    sceneScale: 2.9,
+    sceneScale: 3.45,
   },
   {
     label: "Интерфейсы",
@@ -115,6 +172,7 @@ const boards = [
     model: assetPath("assets/models/can-to-pwm.glb"),
     image: assetPath("assets/images/boards/can-to-pwm-transparent.webp"),
     alt: "3D-рендер платы CAN-to-PWM",
+    baseRotation: 0.39,
     sceneScale: 4.4,
   },
   {
@@ -184,11 +242,11 @@ const heroBoards = [
 const leadServiceBlocks = [
   {
     title: "Аппаратная часть",
-    text: "Логика работы устройства, принципиальная схема, топология платы и подбор элементной базы.",
+    text: "Схема, топология платы и подбор элементной базы.",
   },
   {
     title: "Программная часть",
-    text: "Программное обеспечение для встраиваемых систем под ту же плату и те же требования.",
+    text: "Встраиваемое ПО под плату и требования проекта.",
   },
   {
     title: "Проверка",
@@ -196,53 +254,46 @@ const leadServiceBlocks = [
   },
   {
     title: "Передача",
-    text: "КД по ЕСКД, Gerber-файлы, сверловочные данные и сопровождение производства.",
+    text: "КД по ЕСКД и файлы для производства.",
   },
 ];
 
-// Теги ниже — только то, что уже сказано в тексте услуги, без новых обещаний.
 const services = [
   {
     number: "01",
     title: "Проектирование печатных плат",
-    text: "Трассируем многослойные платы различной сложности, разводим высокочастотные цепи и силовые линии. Готовим Gerber-файлы, сверловочные данные и технические требования к изготовлению.",
+    text: "Трассируем многослойные платы, ВЧ-цепи и силовые линии. Выпускаем Gerber, сверловку и требования к изготовлению.",
     icon: CircuitBoard,
-    tags: ["Многослойные платы", "ВЧ и силовые цепи", "Gerber и сверловка"],
   },
   {
     number: "02",
     title: "Высокочастотные узлы и тракты",
     text: "Проектируем СВЧ-узлы и тракты, считаем и разводим цепи с контролируемым волновым сопротивлением.",
     icon: RadioTower,
-    tags: ["СВЧ-узлы", "Контролируемое волновое сопротивление"],
   },
   {
     number: "03",
     title: "Электроника для БПЛА",
-    text: "Полётные контроллеры, регуляторы скорости, видеопередатчики и каналы связи. Компонуем изделие с учётом вибрационных нагрузок, тепловыделения и габаритов корпуса.",
+    text: "Проектируем полётные контроллеры, ESC, видеопередатчики и каналы связи с учётом вибраций, тепла и габаритов корпуса.",
     icon: Plane,
-    tags: ["Полётные контроллеры", "ESC", "Видеопередатчики", "Каналы связи"],
   },
   {
     number: "04",
     title: "Встраиваемое ПО",
     text: "Разрабатываем программное обеспечение для встраиваемых систем. Прошивка и плата проектируются под один набор требований.",
     icon: Cpu,
-    tags: ["Прошивка", "Один набор требований с платой"],
   },
   {
     number: "05",
     title: "Документация по ЕСКД",
-    text: "Принципиальные электрические схемы по ТЗ, сборочные чертежи и спецификации. Вносим изменения в КД на всех этапах жизненного цикла изделия.",
+    text: "Готовим схемы по ТЗ, сборочные чертежи и спецификации по ЕСКД; ведём изменения КД на всех этапах.",
     icon: FileText,
-    tags: ["Схемы", "Сборочные чертежи", "Спецификации", "Изменения в КД"],
   },
   {
     number: "06",
     title: "Библиотеки и импортозамещение",
-    text: "Ведём библиотеки компонентов в Altium Designer: УГО, посадочные места и 3D-модели. Подбираем и обосновываем элементную базу с учётом наличия на рынке.",
+    text: "Ведём библиотеки Altium Designer: УГО, посадочные места и 3D-модели. Подбираем элементную базу с учётом доступности.",
     icon: Library,
-    tags: ["Altium Designer", "УГО и посадочные места", "3D-модели"],
   },
 ];
 
@@ -304,60 +355,11 @@ const deliverables = [
 const faqItems = [
   {
     q: "Можно заказать только один этап, без всей разработки?",
-    a: "Да. Основное направление — разработка программно-аппаратного комплекса целиком, но отдельные этапы мы берём как самостоятельные работы: например, только топологию платы или только конструкторскую документацию.",
-  },
-  {
-    q: "В каком виде вы передаёте результат?",
-    a: "Принципиальная схема, топология платы, Gerber-файлы и сверловочные данные, технические требования к изготовлению, сборочный чертёж и спецификация, перечень элементов, встраиваемое ПО и результаты испытаний. Комплект оформляется по ЕСКД.",
+    a: "Да. Можно заказать отдельную работу, например топологию платы или комплект конструкторской документации.",
   },
   {
     q: "Что нужно прислать, чтобы начать разговор?",
     a: "Описание устройства или текущей задачи: назначение, условия работы, требования к габаритам, питанию и интерфейсам. Если есть техническое задание, схемы или файлы, присылайте их письмом на info@skysinth.com.",
-  },
-  {
-    q: "Работаете ли вы с импортозамещением элементной базы?",
-    a: "Да. Мы подбираем и обосновываем элементную базу с учётом наличия на рынке и предлагаем замену компонентов, снятых с производства.",
-  },
-  {
-    q: "Что входит в реверс-инжиниринг?",
-    a: "Разбираем готовое изделие, определяем элементную базу, восстанавливаем принципиальную схему и топологию платы. На выходе — схема, топология, производственные файлы и предложения по замене снятых с производства компонентов.",
-  },
-  {
-    q: "В каком ПО ведётся разработка?",
-    a: "Проектирование и библиотеки компонентов ведём в Altium Designer: условные графические обозначения, посадочные места и 3D-модели.",
-  },
-];
-
-const processSteps = [
-  {
-    number: "01",
-    title: "Требования к устройству",
-    text: "Уточняем назначение устройства, условия работы и границы задачи.",
-    visualLabel: "Формируем рамки проекта",
-  },
-  {
-    number: "02",
-    title: "Схема и компоненты",
-    text: "Разрабатываем логику, принципиальную схему и подбираем элементную базу.",
-    visualLabel: "Проектируем электрическую часть",
-  },
-  {
-    number: "03",
-    title: "Печатная плата",
-    text: "Трассируем плату и готовим Gerber-файлы, сверловочные данные и требования к изготовлению.",
-    visualLabel: "Переходим к топологии платы",
-  },
-  {
-    number: "04",
-    title: "Прототип и испытания",
-    text: "Изготавливаем опытный образец и проводим функциональные, климатические и электрические испытания.",
-    visualLabel: "Проверяем опытный образец",
-  },
-  {
-    number: "05",
-    title: "Документация и производство",
-    text: "Оформляем документацию по ЕСКД, сопровождаем производство и вносим изменения по результатам испытаний.",
-    visualLabel: "Передаём комплект в производство",
   },
 ];
 
@@ -379,8 +381,11 @@ function buildMailto(form) {
 
 export function App() {
   const shellRef = useRef(null);
+  const isCompact = useMediaQuery("(max-width: 620px)");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [siteReady, setSiteReady] = useState(false);
   const [formState, setFormState] = useState({ status: "idle", message: "" });
+  const [themeSwitching, setThemeSwitching] = useState(false);
   const [theme, setTheme] = useState(() => {
     try {
       return window.localStorage.getItem("skysynth-theme") === "light"
@@ -398,6 +403,60 @@ export function App() {
   useMetrika(cookies.accepted ? METRIKA_ID : "");
 
   useEffect(() => {
+    let cancelled = false;
+    const minimumDisplayMs = 620;
+    const maximumDisplayMs = 1500;
+    const startedAt = performance.now();
+    const compactHero = window.matchMedia("(max-width: 620px)").matches;
+    const narrowHero = window.matchMedia("(max-width: 860px)").matches;
+    const currentHero = compactHero
+      ? heroMobileScenes[theme]
+      : narrowHero
+        ? heroAssets[theme].mobile
+        : heroAssets[theme].desktop;
+
+    document.body.classList.add("site-loading");
+
+    const criticalAssets = Promise.all([
+      preloadThemeImage(logoAssets[theme]),
+      preloadThemeImage(currentHero),
+      document.fonts?.ready || Promise.resolve(),
+    ]).then(() =>
+      Promise.all([
+        preloadThemeImage(sectionImages.reverse[theme]),
+        preloadThemeImage(sceneAssets.selector[theme]),
+      ]),
+    );
+
+    const timeout = new Promise((resolve) => {
+      window.setTimeout(resolve, maximumDisplayMs);
+    });
+
+    Promise.race([criticalAssets, timeout]).then(() => {
+      const remaining = Math.max(
+        0,
+        minimumDisplayMs - (performance.now() - startedAt),
+      );
+      window.setTimeout(() => {
+        if (!cancelled) setSiteReady(true);
+      }, remaining);
+    });
+
+    return () => {
+      cancelled = true;
+      document.body.classList.remove("site-loading");
+    };
+    // The initial theme and viewport are intentionally captured once. A later
+    // theme switch has its own image warm-up and must not reopen the loader.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!siteReady) return;
+    document.body.classList.remove("site-loading");
+  }, [siteReady]);
+
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
     document
       .querySelector('meta[name="theme-color"]')
@@ -411,6 +470,23 @@ export function App() {
   }, [theme]);
 
   useEffect(() => {
+    const alternateTheme = theme === "dark" ? "light" : "dark";
+    const warmAlternateTheme = () => {
+      void preloadThemeImages(alternateTheme);
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(warmAlternateTheme, {
+        timeout: 800,
+      });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timerId = window.setTimeout(warmAlternateTheme, 120);
+    return () => window.clearTimeout(timerId);
+  }, [theme]);
+
+  useEffect(() => {
     if (!supportsWebGL()) return undefined;
 
     // Warm the selector itself and its first GLB immediately after the initial
@@ -420,18 +496,63 @@ export function App() {
     void import("./BoardCanvas.jsx");
     preloadBoardModel(boards[0]?.model, DRACO_PATH);
 
-    const warmRemaining = () => {
-      boards.slice(1).forEach((item) => preloadBoardModel(item.model, DRACO_PATH));
+    // Decode the remaining GLBs one at a time. Starting all six together made
+    // the main thread hitch on slower phones even though the gallery itself is
+    // several sections below the fold.
+    let cancelled = false;
+    let idleId;
+    let timerId;
+    let nextIndex = 1;
+    const warmNext = () => {
+      if (cancelled || nextIndex >= boards.length) return;
+      preloadBoardModel(boards[nextIndex]?.model, DRACO_PATH);
+      nextIndex += 1;
+      scheduleNext();
+    };
+    const scheduleNext = () => {
+      if (cancelled || nextIndex >= boards.length) return;
+      if ("requestIdleCallback" in window) {
+        idleId = window.requestIdleCallback(warmNext, { timeout: 650 });
+      } else {
+        timerId = window.setTimeout(warmNext, 220);
+      }
     };
 
-    if ("requestIdleCallback" in window) {
-      const idleId = window.requestIdleCallback(warmRemaining, { timeout: 900 });
-      return () => window.cancelIdleCallback(idleId);
-    }
-
-    const timerId = window.setTimeout(warmRemaining, 180);
-    return () => window.clearTimeout(timerId);
+    scheduleNext();
+    return () => {
+      cancelled = true;
+      if (idleId !== undefined) window.cancelIdleCallback?.(idleId);
+      if (timerId !== undefined) window.clearTimeout(timerId);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      window.requestAnimationFrame(() => {
+        document.querySelector(".menu-button")?.focus();
+      });
+    };
+    const closeOnOutsidePress = (event) => {
+      if (event.target.closest(".header-inner")) return;
+      setMenuOpen(false);
+    };
+    const closeOnWideViewport = () => {
+      if (window.innerWidth > 860) setMenuOpen(false);
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    window.addEventListener("resize", closeOnWideViewport);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnOutsidePress);
+      window.removeEventListener("resize", closeOnWideViewport);
+    };
+  }, [menuOpen]);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -449,8 +570,17 @@ export function App() {
     });
   }
 
-  function toggleTheme() {
-    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+  async function toggleTheme() {
+    if (themeSwitching) return;
+
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setThemeSwitching(true);
+    await preloadThemeImages(nextTheme);
+    setTheme(nextTheme);
+
+    window.requestAnimationFrame(() => {
+      setThemeSwitching(false);
+    });
   }
 
   async function handleSubmit(event) {
@@ -497,7 +627,26 @@ export function App() {
   }
 
   return (
-    <div className="site-shell" ref={shellRef}>
+    <div className="site-shell" data-ready={siteReady ? "true" : "false"} ref={shellRef}>
+      <div
+        className="site-loader"
+        data-visible={siteReady ? "false" : "true"}
+        role="status"
+        aria-label="Загрузка сайта"
+        aria-hidden={siteReady ? "true" : undefined}
+      >
+        <img
+          src={logoAssets[theme]}
+          alt="СКАЙСИНТ ИНЖИНИРИНГ"
+          width="208"
+          height="68"
+          fetchPriority="high"
+        />
+        <span className="site-loader-track" aria-hidden="true">
+          <span />
+        </span>
+      </div>
+
       <a className="skip-link" href="#main">
         Перейти к содержанию
       </a>
@@ -526,8 +675,8 @@ export function App() {
                 {item.label}
               </a>
             ))}
-            <a className="site-nav-mail" href={`mailto:${CONTACT_EMAIL}`}>
-              {CONTACT_EMAIL}
+            <a className="site-nav-cta" href="#contact" onClick={closeMenu}>
+              Оставить заявку
             </a>
           </nav>
 
@@ -535,6 +684,7 @@ export function App() {
             <button
               className="theme-toggle"
               type="button"
+              aria-busy={themeSwitching}
               aria-label={
                 theme === "dark"
                   ? "Включить светлую версию"
@@ -542,6 +692,7 @@ export function App() {
               }
               title={theme === "dark" ? "Светлая версия" : "Тёмная версия"}
               aria-pressed={theme === "light"}
+              disabled={themeSwitching}
               onClick={toggleTheme}
             >
               {theme === "dark" ? (
@@ -557,11 +708,19 @@ export function App() {
             <button
               className="menu-button"
               type="button"
+              aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
               aria-expanded={menuOpen}
               aria-controls="site-navigation"
               onClick={() => setMenuOpen((value) => !value)}
             >
-              {menuOpen ? "Закрыть" : "Меню"}
+              <span className="menu-button-lines" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span className="sr-only">
+                {menuOpen ? "Закрыть меню" : "Открыть меню"}
+              </span>
             </button>
           </div>
         </div>
@@ -570,9 +729,6 @@ export function App() {
       <main id="main">
         <section className="hero" id="top" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="hero-eyebrow">
-              Инженерная команда · Санкт-Петербург
-            </p>
             <h1 id="hero-title">
               <span>Разработка электроники</span>
               <span>для сложных устройств</span>
@@ -591,29 +747,41 @@ export function App() {
           </div>
 
           <div className="hero-visual">
-            <Suspense
-              fallback={
-                <div className="hero-media" aria-hidden="true">
-                  <picture>
-                    <source media="(max-width: 860px)" srcSet={heroAsset.mobile} />
-                    <img
-                      src={heroAsset.desktop}
-                      alt=""
-                      width="1586"
-                      height="992"
-                      fetchPriority="high"
-                    />
-                  </picture>
-                </div>
-              }
-            >
-              <HeroBoardExperience
-                backgrounds={heroAsset}
-                boards={heroBoards}
-                dracoPath={assetPath("draco/")}
-                theme={theme}
-              />
-            </Suspense>
+            {isCompact ? (
+              <picture className="hero-mobile-scene" aria-hidden="true">
+                <img
+                  src={heroMobileScenes[theme]}
+                  alt=""
+                  width="1086"
+                  height="1448"
+                  fetchPriority="high"
+                />
+              </picture>
+            ) : (
+              <Suspense
+                fallback={
+                  <div className="hero-media" aria-hidden="true">
+                    <picture>
+                      <source media="(max-width: 860px)" srcSet={heroAsset.mobile} />
+                      <img
+                        src={heroAsset.desktop}
+                        alt=""
+                        width="1586"
+                        height="992"
+                        fetchPriority="high"
+                      />
+                    </picture>
+                  </div>
+                }
+              >
+                <HeroBoardExperience
+                  backgrounds={heroAsset}
+                  boards={heroBoards}
+                  dracoPath={assetPath("draco/")}
+                  theme={theme}
+                />
+              </Suspense>
+            )}
           </div>
         </section>
 
@@ -631,27 +799,26 @@ export function App() {
 
             <article className="lead-service" data-reveal="out">
               <div className="lead-service-head">
-                <p className="eyebrow">Основная услуга</p>
+                <p className="eyebrow">Устройство целиком</p>
                 <h3>Разработка программно-аппаратных комплексов</h3>
-                <p>
-                  От требований и схемы до испытаний и комплекта файлов для
-                  производства.
-                </p>
               </div>
 
-              <div className="lead-service-grid">
+              <ol className="lead-service-grid">
                 {leadServiceBlocks.map((block, index) => (
-                  <div className="lead-service-block" key={block.title}>
+                  <li className="lead-service-block" key={block.title}>
                     <span className="lead-service-index" aria-hidden="true">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <h4>{block.title}</h4>
                     <p>{block.text}</p>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ol>
             </article>
 
+            <p className="eyebrow service-list-label" data-reveal="out">
+              Направления работ
+            </p>
             <div className="service-list">
               {services.map((service) => (
                 <article className="service-row" data-reveal="out" key={service.number}>
@@ -664,11 +831,6 @@ export function App() {
                   </div>
                   <div className="service-body">
                     <p>{service.text}</p>
-                    <ul className="service-tags">
-                      {service.tags.map((tag) => (
-                        <li key={tag}>{tag}</li>
-                      ))}
-                    </ul>
                   </div>
                 </article>
               ))}
@@ -676,27 +838,11 @@ export function App() {
           </div>
         </section>
 
-        <section className="accent-band" aria-labelledby="accent-title">
-          <div className="accent-inner" data-reveal="out">
-            <div>
-              <p className="accent-eyebrow">Подход</p>
-              <p className="accent-line" id="accent-title">
-                Решения ориентированы на <em>импортозамещение</em>, а топология
-                прорабатывается с учётом <em>механических и тепловых</em>
-                {" "}требований.
-              </p>
-            </div>
-            <a className="accent-cta" href="#contact">
-              Обсудить задачу
-            </a>
-          </div>
-        </section>
-
         <section className="section reverse-section" id="reverse">
           <div className="section-shell">
             <div className="reverse-panel" data-reveal="out">
               <div className="reverse-copy">
-                <p className="eyebrow">Дополнительная услуга</p>
+                <p className="eyebrow">Работа по готовому изделию</p>
                 <h2>Реверс-инжиниринг</h2>
                 <p>
                   Восстанавливаем документацию по готовому изделию, когда
@@ -757,12 +903,12 @@ export function App() {
           <div className="section-shell">
             <div className="section-heading-row section-heading-with-copy" data-reveal="out">
               <div>
-                <p className="eyebrow">Результат</p>
-                <h2>Что вы получаете <em>на выходе</em></h2>
+                <p className="eyebrow">Результат работы</p>
+                <h2>Материалы <em>по проекту</em></h2>
               </div>
               <p className="section-intro">
-                Комплект документов и файлов, по которым устройство можно
-                изготавливать и дорабатывать дальше.
+                Документация, производственные файлы, программное обеспечение,
+                опытный образец и результаты испытаний.
               </p>
             </div>
 
@@ -776,30 +922,6 @@ export function App() {
                   <p>{item.text}</p>
                 </article>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section
-          className="section process-section"
-          id="process"
-        >
-          <div className="section-shell">
-            <div className="section-heading-row section-heading-with-copy" data-reveal="out">
-              <div>
-                <p className="eyebrow">Процесс</p>
-                <h2>От требований <em>до производства</em></h2>
-              </div>
-              <p className="section-intro">
-                Пять последовательных этапов — от постановки задачи до
-                документации и сопровождения производства.
-              </p>
-            </div>
-
-            <div data-reveal="out">
-              <ProcessFlow
-                steps={processSteps}
-              />
             </div>
           </div>
         </section>
@@ -914,23 +1036,19 @@ export function App() {
       </main>
 
       {cookies.asking ? (
-        <div className="cookie-bar" role="dialog" aria-label="Использование cookie">
+        <div className="cookie-bar" role="dialog" aria-label="Настройки cookie">
           <div className="cookie-text">
             <p>
-              После вашего согласия сайт может загрузить Яндекс.Метрику для
-              обезличенной статистики посещений. Без согласия счётчик не
-              загружается.
+              Используем cookie для работы сайта и обезличенной статистики.
             </p>
-            <a href={assetPath("privacy.html#cookies")}>
-              Как используются cookie и Метрика
-            </a>
+            <a href={assetPath("privacy.html#cookies")}>Подробнее</a>
           </div>
           <div className="cookie-actions">
             <button type="button" className="cookie-decline" onClick={cookies.decline}>
-              Только необходимые
+              Отклонить
             </button>
             <button type="button" className="cookie-accept" onClick={cookies.accept}>
-              Разрешить статистику
+              Принять
             </button>
           </div>
         </div>

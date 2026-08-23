@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
+import { Suspense } from "react";
 import { PCFShadowMap } from "three";
-import { BoardScene } from "./boardScene.jsx";
+import { BoardModelPreloader, BoardScene } from "./boardScene.jsx";
 
 /**
  * Lazy entry point for everything three.js. Nothing on the first paint imports
@@ -15,6 +16,7 @@ export function BoardCanvas({
   floating,
   onReady,
   orbit,
+  preloadBoards,
   reducedMotion,
   theme,
   transitionDirection,
@@ -23,7 +25,8 @@ export function BoardCanvas({
   return (
     <Canvas
       camera={{ position: [0, 0.05, cameraZ], fov: 32, near: 0.1, far: 40 }}
-      dpr={compact ? [1, 1.5] : [1, 1.65]}
+      dpr={compact ? [1, 1.25] : [1, 1.65]}
+      frameloop={floating || transitionMotion !== "idle" ? "always" : "demand"}
       shadows={{ type: PCFShadowMap }}
       gl={{
         alpha: true,
@@ -31,9 +34,18 @@ export function BoardCanvas({
         powerPreference: "high-performance",
       }}
     >
+      {preloadBoards?.length ? (
+        <Suspense fallback={null}>
+          <BoardModelPreloader
+            boards={preloadBoards}
+            dracoPath={dracoPath}
+          />
+        </Suspense>
+      ) : null}
       <BoardScene
         autoRotate={autoRotate}
         board={board}
+        compact={compact}
         dracoPath={dracoPath}
         floating={floating}
         onReady={onReady}

@@ -237,17 +237,21 @@ textarea:focus-visible {
 
 [data-reveal] {
   transition:
-    opacity 620ms cubic-bezier(0.22, 0.68, 0, 1),
-    transform 620ms cubic-bezier(0.22, 0.68, 0, 1);
+    opacity 820ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 820ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 820ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
 }
 
 [data-reveal="out"] {
   opacity: 0;
-  transform: translate3d(0, 18px, 0);
+  filter: blur(8px);
+  transform: translate3d(0, 30px, 0) scale(0.99);
 }
 
 [data-reveal="in"] {
   opacity: 1;
+  filter: blur(0);
   transform: none;
 }
 
@@ -351,7 +355,7 @@ h2,
   color: var(--fg);
 }
 
-.site-nav-mail {
+.site-nav-cta {
   display: none;
 }
 
@@ -384,15 +388,52 @@ h2,
 
 .menu-button {
   display: none;
-  min-height: 40px;
-  padding: 0 18px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: var(--fg);
-  color: var(--bg);
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fg);
   cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.menu-button:hover {
+  background: var(--line);
+}
+
+.menu-button-lines {
+  width: 22px;
+  display: grid;
+  gap: 5px;
+}
+
+.menu-button-lines > span {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: center;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menu-button-lines > span:nth-child(2) {
+  transition: opacity 120ms ease 90ms;
+}
+
+.menu-button[aria-expanded="true"] .menu-button-lines > span:nth-child(1) {
+  transform: translateY(6.5px) rotate(45deg);
+}
+
+.menu-button[aria-expanded="true"] .menu-button-lines > span:nth-child(2) {
+  opacity: 0;
+  transition: opacity 70ms linear;
+}
+
+.menu-button[aria-expanded="true"] .menu-button-lines > span:nth-child(3) {
+  transform: translateY(-6.5px) rotate(-45deg);
 }
 
 /* Hero ------------------------------------------------------------------ */
@@ -3766,7 +3807,7 @@ h2,
     border-top: 1px solid var(--line);
   }
 
-  .site-nav-mail {
+  .site-nav-cta {
     display: flex;
     color: var(--gold-soft);
   }
@@ -7226,7 +7267,7 @@ h2,
 .board-selector[data-motion="spin-out"] .board-selector-scene {
   opacity: 0.9;
   filter: blur(3.2px) saturate(0.84);
-  transform: translate3d(0, -0.5%, 0) scale(0.982);
+  transform: none;
   transition:
     transform 500ms cubic-bezier(0.55, 0, 0.9, 0.35),
     opacity 390ms ease 80ms,
@@ -7243,7 +7284,7 @@ h2,
 .board-selector[data-motion="spin-in"] .board-selector-scene {
   opacity: 1;
   filter: none;
-  transform: translate3d(0, 0, 0) scale(1);
+  transform: none;
   transition:
     transform 680ms cubic-bezier(0.16, 1, 0.3, 1),
     opacity 420ms ease,
@@ -7287,4 +7328,938 @@ h2,
   .board-selector-transition-video {
     display: none !important;
   }
+}
+
+/* Compact consent bar: the legal detail stays on the linked policy page. */
+
+.cookie-bar {
+  max-width: 660px;
+  padding: 14px 16px;
+  gap: 16px;
+  border-radius: 12px;
+}
+
+.cookie-text p {
+  margin-bottom: 3px;
+  line-height: 1.45;
+}
+
+.cookie-actions {
+  gap: 8px;
+}
+
+.cookie-accept,
+.cookie-decline {
+  min-height: 44px;
+  padding-inline: 18px;
+}
+
+@media (max-width: 640px) {
+  .cookie-bar {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .cookie-text a {
+    min-height: 0;
+  }
+}
+
+/* Compact services and deliverables: one editorial register, no card wall. */
+
+.services-section .section-heading-row,
+.deliverables-section .section-heading-row {
+  margin-bottom: clamp(34px, 4vw, 54px);
+}
+
+.lead-service {
+  grid-template-columns: minmax(280px, 0.74fr) minmax(0, 1.26fr);
+  gap: clamp(32px, 4vw, 68px);
+  padding-bottom: clamp(30px, 3vw, 42px);
+}
+
+.lead-service h3 {
+  max-width: 18ch;
+  margin: 12px 0 14px;
+  font-size: clamp(22px, 2.1vw, 32px);
+}
+
+.lead-service-head > p:last-child {
+  max-width: 42ch;
+  font-size: 14.5px;
+  line-height: 1.58;
+}
+
+.lead-service-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 22px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lead-service-block {
+  min-height: 0;
+  padding: 17px 0 0;
+  border-top: 1px solid var(--line-2);
+  background: transparent;
+}
+
+.lead-service-index {
+  margin-bottom: 14px;
+}
+
+.lead-service-block h4 {
+  margin-bottom: 7px;
+  line-height: 1.35;
+}
+
+.lead-service-block p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.service-list-label {
+  margin-top: 28px;
+}
+
+.service-list {
+  margin-top: 4px;
+}
+
+.service-row {
+  grid-template-columns: 40px minmax(220px, 0.68fr) minmax(0, 1.32fr);
+  gap: clamp(16px, 2vw, 28px);
+  align-items: center;
+  padding: 17px 0;
+}
+
+.service-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.service-head {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding-top: 0;
+}
+
+.service-head .item-number {
+  margin: 0;
+}
+
+.service-row h3 {
+  font-size: 17px;
+  line-height: 1.28;
+}
+
+.service-body {
+  display: block;
+  padding-top: 0;
+}
+
+.service-body p {
+  max-width: 68ch;
+  font-size: 13.5px;
+  line-height: 1.56;
+}
+
+.deliverables-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 clamp(24px, 3vw, 42px);
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.deliverable,
+.deliverable:hover {
+  min-height: 0;
+  padding: 18px 0 20px;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  column-gap: 10px;
+  align-content: start;
+}
+
+.deliverable .item-number {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin: 2px 0 0;
+  color: var(--gold-soft);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.deliverable h3 {
+  grid-column: 2;
+  margin: 0 0 6px;
+  font-size: 15.5px;
+  line-height: 1.35;
+}
+
+.deliverable > p:last-child {
+  grid-column: 2;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1000px) {
+  .lead-service {
+    grid-template-columns: 1fr;
+  }
+
+  .deliverables-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .lead-service-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .service-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px 14px;
+    padding: 18px 0;
+  }
+
+  .service-head,
+  .service-body {
+    grid-column: 2;
+  }
+
+  .service-head {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .services-section .section-heading-row,
+  .deliverables-section .section-heading-row {
+    margin-bottom: 34px;
+  }
+
+  .lead-service-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 14px;
+  }
+
+  .deliverables-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile composition: one first screen, quiet static board, compact gallery. */
+
+@media (max-width: 860px) {
+  .site-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.985);
+    transform-origin: top right;
+    transition:
+      opacity 220ms ease,
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s linear 300ms;
+  }
+
+  .site-nav-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition:
+      opacity 220ms ease,
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s;
+  }
+
+  .menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 620px) {
+  .hero {
+    min-height: max(760px, 100svh);
+    display: grid;
+    align-items: end;
+    isolation: isolate;
+    background: var(--bg);
+  }
+
+  .hero-copy {
+    order: initial;
+    padding: calc(var(--cap-h) + var(--cap-top) + 48px) var(--pad) 54px;
+    background: transparent;
+  }
+
+  .hero-copy > * {
+    max-width: 100%;
+  }
+
+  .hero-description {
+    color: color-mix(in srgb, var(--fg) 72%, transparent);
+  }
+
+  .hero-actions {
+    margin-top: 26px;
+    align-items: flex-start;
+  }
+
+  .hero-actions .button {
+    width: auto;
+    min-height: 48px;
+    padding-inline: 24px;
+  }
+
+  .hero-visual {
+    position: absolute;
+    z-index: 0;
+    order: initial;
+    inset: 0;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  .hero-stage-background img,
+  .hero-media img {
+    filter: brightness(0.58) contrast(1.18) saturate(0.72);
+  }
+
+  .hero-product-zone {
+    top: 14%;
+    left: 8%;
+    width: 84%;
+    height: 72%;
+    opacity: 0.56;
+    pointer-events: none;
+  }
+
+  .hero-board-static {
+    pointer-events: none;
+  }
+
+  .hero-board-static img {
+    filter: brightness(0.66) contrast(1.2) saturate(0.92)
+      drop-shadow(0 18px 28px rgba(0, 0, 0, 0.54));
+  }
+
+  .hero-visual::after {
+    background:
+      linear-gradient(180deg, rgba(8, 9, 10, 0.74) 0%, rgba(8, 9, 10, 0.42) 28%, rgba(8, 9, 10, 0.54) 62%, var(--bg) 100%),
+      linear-gradient(90deg, rgba(8, 9, 10, 0.5), transparent 82%);
+  }
+
+  .hero-3d-note,
+  .hero-model-loading,
+  .hero-3d-ui,
+  .hero-caption {
+    display: none;
+  }
+
+  :root[data-theme="light"] .hero-stage-background img,
+  :root[data-theme="light"] .hero-media img {
+    filter: brightness(0.76) contrast(1.18) saturate(0.52);
+  }
+
+  :root[data-theme="light"] .hero-board-static img {
+    filter: brightness(0.72) contrast(1.34) saturate(0.86)
+      drop-shadow(0 18px 28px rgba(28, 34, 31, 0.28));
+  }
+
+  :root[data-theme="light"] .hero-visual::after {
+    background:
+      linear-gradient(180deg, rgba(232, 233, 229, 0.82) 0%, rgba(232, 233, 229, 0.52) 30%, rgba(232, 233, 229, 0.62) 64%, var(--bg) 100%),
+      linear-gradient(90deg, rgba(232, 233, 229, 0.56), transparent 84%);
+  }
+
+  .developments-section,
+  .board-selector-stage {
+    min-height: 800px;
+    height: 800px;
+  }
+
+  .developments-head {
+    padding: 52px var(--pad) 0;
+  }
+
+  .developments-head .section-heading-with-copy {
+    gap: 14px;
+  }
+
+  .developments-head .section-intro {
+    max-width: 33ch;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .selector-board-canvas {
+    top: 36%;
+    right: -2%;
+    bottom: 16%;
+    left: -2%;
+  }
+
+  .board-selector-meta {
+    top: 242px;
+    right: var(--pad);
+    bottom: auto;
+    left: var(--pad);
+    width: auto;
+    padding: 0;
+  }
+
+  .board-selector-heading {
+    gap: 12px;
+    padding: 0;
+  }
+
+  .board-selector-heading h3 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .board-selector-arrow {
+    top: 57%;
+    width: 68px;
+    height: 80px;
+  }
+
+  .board-selector-arrow-prev {
+    left: 2px;
+  }
+
+  .board-selector-arrow-next {
+    right: 2px;
+  }
+
+  .board-selector-arrow span {
+    font-size: 58px;
+  }
+
+  .board-selector-dots {
+    right: var(--pad);
+    bottom: 18px;
+    left: var(--pad);
+    justify-content: center;
+  }
+
+  .board-selector-hint,
+  .board-selector-loading {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Mobile scene calibration, 24.08.2026: the first screen is deliberately
+   typographic; photographic stages below are contained rather than cover-
+   cropped so their physical edges remain legible. */
+
+@media (max-width: 620px) {
+  .header-inner {
+    width: min(262px, calc(100% - 2 * var(--pad)));
+    padding-left: 15px;
+    gap: 8px;
+  }
+
+  .hero {
+    min-height: max(700px, 100svh);
+    align-items: center;
+    background: var(--bg);
+  }
+
+  .hero-copy {
+    align-self: center;
+    padding: calc(var(--cap-h) + var(--cap-top) + 54px) var(--pad) 42px;
+  }
+
+  .hero-visual {
+    display: block;
+  }
+
+  .board-selector-stage {
+    background: #050607;
+  }
+
+  .board-selector-backdrop {
+    top: 61%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: 206%;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+    transform: translate(-50%, -50%);
+  }
+
+  .board-selector[data-direction="-1"] .board-selector-transition-video {
+    transform: translate(-50%, -50%) scaleX(-1);
+  }
+
+  .board-selector-transition-video {
+    /* The clip is 16:9 while the accepted still is 1586:992. Their platter
+       diameters already match at 206vw; the source platter centre differs by
+       1.13% of that width when the same gold rim is used as the anchor, which
+       is 2.3vw in the composed mobile stage. */
+    top: calc(61% + 2.3vw);
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: 206%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+    -webkit-mask-image: radial-gradient(ellipse 32% 12% at 50% 76%, #000 0%, rgba(0, 0, 0, 0.98) 48%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.28) 86%, transparent 100%);
+    mask-image: radial-gradient(ellipse 32% 12% at 50% 76%, #000 0%, rgba(0, 0, 0, 0.98) 48%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.28) 86%, transparent 100%);
+  }
+
+  .board-selector-transition-video[data-active="true"] {
+    opacity: 1;
+  }
+
+  .reverse-media {
+    background: #090a0b;
+  }
+
+  .reverse-media img {
+    object-fit: contain;
+    object-position: center;
+    transform: scale(0.94);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  }
+
+  .contact-band {
+    background: var(--bg);
+  }
+
+  .contact-band .contact-band-photo {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: 112%;
+    height: auto;
+    max-width: none;
+    object-fit: contain;
+    object-position: center;
+    transform: translate(-50%, -50%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  }
+
+  .contact-band::before,
+  .contact-band::after {
+    filter: blur(7px);
+  }
+
+  .contact-section .section-shell {
+    padding-top: 54px;
+  }
+}
+
+/* Latest mobile composition: a quiet, non-interactive hero photograph and a
+   full-bleed reverse-engineering scene that belongs to the section rather than
+   reading as an inserted image card. */
+
+@media (max-width: 620px) {
+  .hero-copy {
+    z-index: 4;
+  }
+
+  .hero-mobile-scene {
+    position: absolute;
+    inset: 0;
+    display: block;
+    overflow: hidden;
+  }
+
+  .hero-mobile-scene img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 54%;
+    filter: brightness(0.46) contrast(1.14) saturate(0.72);
+    transform: scale(1.015);
+  }
+
+  .hero-visual::after {
+    background:
+      linear-gradient(180deg, rgba(8, 9, 10, 0.78) 0%, rgba(8, 9, 10, 0.46) 24%, rgba(8, 9, 10, 0.7) 66%, var(--bg) 100%),
+      linear-gradient(90deg, rgba(8, 9, 10, 0.5) 0%, rgba(8, 9, 10, 0.12) 72%, rgba(8, 9, 10, 0.28) 100%);
+  }
+
+  .reverse-panel {
+    grid-template-rows: auto 330px auto;
+    gap: 0;
+  }
+
+  .reverse-media {
+    width: 100vw;
+    height: 350px;
+    margin: -8px 0 -12px calc(50% - 50vw);
+    overflow: hidden;
+    background: #090a0b;
+  }
+
+  .reverse-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 51% center;
+    filter: brightness(0.78) contrast(1.1) saturate(0.68);
+    transform: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .reverse-media::after {
+    background:
+      linear-gradient(180deg, #090a0b 0%, rgba(9, 10, 11, 0.68) 13%, transparent 34%, transparent 64%, rgba(9, 10, 11, 0.72) 84%, #090a0b 100%),
+      linear-gradient(90deg, rgba(9, 10, 11, 0.7) 0%, transparent 24%, transparent 76%, rgba(9, 10, 11, 0.7) 100%);
+  }
+
+  .reverse-steps {
+    position: relative;
+    z-index: 2;
+    margin-top: -4px;
+    background: transparent;
+  }
+
+  :root[data-theme="light"] .hero-mobile-scene img {
+    filter: brightness(0.84) contrast(1.05) saturate(0.68);
+  }
+
+  :root[data-theme="light"] .hero-visual::after {
+    background:
+      linear-gradient(180deg, rgba(213, 216, 212, 0.82) 0%, rgba(213, 216, 212, 0.5) 24%, rgba(213, 216, 212, 0.72) 66%, var(--bg) 100%),
+      linear-gradient(90deg, rgba(213, 216, 212, 0.58) 0%, rgba(213, 216, 212, 0.12) 72%, rgba(213, 216, 212, 0.34) 100%);
+  }
+
+  :root[data-theme="light"] .reverse-media {
+    background: var(--bg);
+  }
+
+  :root[data-theme="light"] .reverse-media::after {
+    background:
+      linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 68%, transparent) 13%, transparent 34%, transparent 64%, color-mix(in srgb, var(--bg) 72%, transparent) 84%, var(--bg) 100%),
+      linear-gradient(90deg, color-mix(in srgb, var(--bg) 70%, transparent) 0%, transparent 24%, transparent 76%, color-mix(in srgb, var(--bg) 70%, transparent) 100%);
+  }
+}
+
+/* Desktop gallery crop: remove a small strip of empty laboratory ceiling by
+   moving the whole accepted stage under the section clip. The photo, video and
+   live board keep their shared coordinate system and therefore stay aligned. */
+
+@media (min-width: 901px) {
+  .developments-section {
+    min-height: calc(clamp(820px, 100svh, 1040px) - 44px);
+  }
+
+  .developments-section .board-selector {
+    margin-top: -44px;
+  }
+}
+
+/* Photo and transition clip share one intrinsic 1586:992 coordinate frame.
+   The frame itself cover-fits the stage, so browser chrome and viewport aspect
+   ratio can no longer move the filmed platter independently from the still. */
+
+.board-selector-stage {
+  container-type: size;
+}
+
+.board-selector-media {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 159.879cqh);
+  aspect-ratio: 1586 / 992;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.board-selector-media .board-selector-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: fill;
+  object-position: center;
+  transform: none;
+}
+
+.board-selector-media .board-selector-transition-video {
+  top: 6.81%;
+  right: auto;
+  bottom: auto;
+  left: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: fill;
+  object-position: center;
+  transform: translateX(0.17%);
+  transform-origin: center;
+}
+
+.board-selector[data-direction="-1"]
+  .board-selector-media
+  .board-selector-transition-video {
+  transform: translateX(-0.61%) scaleX(-1);
+}
+
+@media (max-width: 620px) {
+  .board-selector-media {
+    top: 61%;
+    width: 206%;
+  }
+
+  .board-selector-media .board-selector-transition-video {
+    -webkit-mask-image: radial-gradient(ellipse 32% 12% at 50% 76%, #000 0%, rgba(0, 0, 0, 0.98) 48%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.28) 86%, transparent 100%);
+    mask-image: radial-gradient(ellipse 32% 12% at 50% 76%, #000 0%, rgba(0, 0, 0, 0.98) 48%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.28) 86%, transparent 100%);
+  }
+}
+
+/* Desktop gallery information belongs to the upper presentation area. Keep
+   the mobile composition unchanged, where the title already sits above the
+   board and the compact selector remains at the bottom. */
+
+@media (min-width: 621px) {
+  .board-selector-meta {
+    top: clamp(238px, 28vh, 292px);
+    bottom: auto;
+  }
+
+  .board-selector-dots {
+    top: clamp(252px, 29vh, 306px);
+    bottom: auto;
+  }
+}
+
+/* The gallery already dissolves into the project-materials background. A
+   literal section rule made that photographic hand-off look cut in half. */
+
+.developments-section,
+.deliverables-section {
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+}
+
+.deliverables-section {
+  margin-top: -1px;
+}
+
+.deliverables-section::after {
+  display: none !important;
+}
+
+/* Give the factual service register a clearer reading hierarchy without
+   rebuilding it into another wall of cards. */
+
+.service-list-label {
+  color: var(--gold-soft);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+.service-row h3 {
+  font-size: clamp(18px, 1.35vw, 20px);
+}
+
+.service-body p {
+  font-size: 14.5px;
+  line-height: 1.58;
+}
+
+/* The opening screen is a real asset gate, not an artificial intro: it leaves
+   after the current hero, fonts and section photographs are ready, with a
+   timeout in React so a failed request can never trap the visitor. */
+
+body.site-loading {
+  overflow: hidden;
+}
+
+.site-loader {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 24px;
+  background: #08090a;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 420ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s linear 420ms;
+}
+
+:root[data-theme="light"] .site-loader {
+  background: #e5e7e2;
+}
+
+.site-loader[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transition: none;
+}
+
+.site-loader img {
+  display: block;
+  width: clamp(146px, 15vw, 208px);
+  height: auto;
+  animation: site-loader-breathe 1.45s ease-in-out infinite alternate;
+}
+
+.site-loader-track {
+  width: clamp(120px, 12vw, 166px);
+  height: 1px;
+  overflow: hidden;
+  background: rgba(217, 191, 124, 0.18);
+}
+
+.site-loader-track > span {
+  display: block;
+  width: 46%;
+  height: 100%;
+  background: #d7bd78;
+  animation: site-loader-progress 1.05s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes site-loader-breathe {
+  from {
+    opacity: 0.72;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes site-loader-progress {
+  from {
+    transform: translateX(-112%);
+  }
+  to {
+    transform: translateX(248%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-loader,
+  .site-loader img,
+  .site-loader-track > span {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Reverse engineering stays secondary to the core service and gallery. The
+   adjustment is deliberately slight, and mobile keeps its accepted full-bleed
+   composition instead of turning the scene back into a separate card. */
+
+.reverse-media img {
+  filter: brightness(0.82) contrast(1.08) saturate(0.72);
+}
+
+.reverse-copy > p:last-child,
+.reverse-step p {
+  opacity: 0.88;
+}
+
+.reverse-copy .eyebrow,
+.reverse-step h3 {
+  opacity: 0.92;
+}
+
+@media (min-width: 621px) {
+  .reverse-media img {
+    transform: scale(0.98);
+  }
+}
+
+:root[data-theme="light"] .reverse-media img {
+  filter: brightness(0.86) contrast(1.05) saturate(0.68);
+}
+
+/* Keep the dark hand-off below the gallery neutral. The previous --deep tone
+   added a broad blue-grey veil across the entire materials section. */
+
+:root[data-theme="dark"] .developments-section::after {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(11, 12, 13, 0.52) 58%,
+    #0b0c0d 100%
+  );
+}
+
+:root[data-theme="dark"] .deliverables-section {
+  background: #0b0c0d;
+}
+
+:root[data-theme="dark"] .deliverables-section::before {
+  background: radial-gradient(
+    72% 46% at 50% 106%,
+    rgba(201, 162, 39, 0.035),
+    transparent 64%
+  );
+  opacity: 0.7;
+}
+
+/* Boards 01 and 07 have the largest silhouette difference. Keep their exact
+   scales and hide only the edge-on model hand-off more gently. */
+
+.board-selector[data-soft-size-bridge="true"][data-motion="spin-out"]
+  .board-selector-scene {
+  opacity: 0.62;
+  filter: blur(5px) saturate(0.8);
+}
+
+.board-selector[data-soft-size-bridge="true"][data-motion="spin-in"]
+  .board-selector-scene {
+  opacity: 0.72;
+  filter: blur(4px) saturate(0.84);
+}
+
+.board-selector[data-soft-size-bridge="true"][data-motion="settle"]
+  .board-selector-scene {
+  opacity: 1;
+  filter: none;
+  transition:
+    opacity 480ms ease,
+    filter 620ms cubic-bezier(0.16, 1, 0.3, 1);
 }

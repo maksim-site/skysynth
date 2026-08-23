@@ -6,7 +6,7 @@ const SPIN_TRANSITION_MS = 1100;
 const SPIN_SETTLE_MS = 520;
 // The smootherstep turn reaches its first edge-on quarter-turn at 36%.
 // Swap there, while the board is thinnest and the baked speed ramp is fast.
-const SPIN_SWAP_MS = Math.round(SPIN_TRANSITION_MS * 0.36);
+const SPIN_SWAP_MS = 410;
 
 /**
  * Product selector rather than a catalogue: one exact board render floats over
@@ -20,9 +20,12 @@ export function BoardGallery({
   turntableVideo,
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [inView, setInView] = useState(false);
+  const inView = true;
   const [modelReady, setModelReady] = useState(false);
+  const [stageVisible, setStageVisible] = useState(false);
+  const [videoPrimed, setVideoPrimed] = useState(theme !== "dark" || !turntableVideo);
   const [motion, setMotion] = useState("idle");
+  const [softSizeBridge, setSoftSizeBridge] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState(1);
   const [webGLAvailable] = useState(supportsWebGL);
   const rootRef = useRef(null);
@@ -35,21 +38,19 @@ export function BoardGallery({
   const board = boards[activeIndex];
   const show3D = inView && webGLAvailable && Boolean(board.model);
   const live = show3D && modelReady;
+  const transitionReady = !show3D || modelReady;
+  const drifting = stageVisible && !reducedMotion;
 
   useEffect(() => {
     const node = rootRef.current;
     if (!node || !("IntersectionObserver" in window)) {
-      setInView(true);
+      setStageVisible(true);
       return undefined;
     }
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        setInView(true);
-        observer.disconnect();
-      },
-      { rootMargin: "1400px 0px" },
+      ([entry]) => setStageVisible(entry.isIntersecting),
+      { threshold: 0.12 },
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -63,6 +64,12 @@ export function BoardGallery({
     boards.forEach((item) => preloadBoardModel(item.model, dracoPath));
   }, [boards, dracoPath, inView, webGLAvailable]);
 
+  useEffect(() => {
+    // A light-theme visit does not mount the dark transition clip. Prime it
+    // again after a later theme change before enabling the first dark turn.
+    setVideoPrimed(theme !== "dark" || !turntableVideo);
+  }, [theme, turntableVideo]);
+
   useEffect(
     () => () => {
       window.clearTimeout(transitionTimer.current);
@@ -75,6 +82,27 @@ export function BoardGallery({
 
   const handleModelReady = useCallback(() => {
     setModelReady(true);
+  }, []);
+
+  const primeTurntableVideo = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || videoPrimed || theme !== "dark") return;
+
+    video.currentTime = 0;
+    video.playbackRate = 4;
+    video.play().catch(() => {
+      setVideoPrimed(true);
+    });
+  }, [theme, videoPrimed]);
+
+  const finishTurntablePrime = useCallback(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+      video.playbackRate = 1;
+    }
+    setVideoPrimed(true);
   }, []);
 
   const warm3D = useCallback(
@@ -97,7 +125,7 @@ export function BoardGallery({
   }, [theme]);
 
   function moveTo(nextIndex, direction) {
-    if (motion !== "idle" || nextIndex === activeIndex) return;
+    if (motion !== "idle" || !transitionReady || nextIndex === activeIndex) return;
 
     if (reducedMotion) {
       setActiveIndex(nextIndex);
@@ -105,6 +133,7 @@ export function BoardGallery({
     }
 
     warm3D(boards[nextIndex]?.model);
+    setSoftSizeBridge(Math.abs(nextIndex - activeIndex) === boards.length - 1);
     setTransitionDirection(direction >= 0 ? 1 : -1);
     setMotion("spin-out");
     startTurntableRamp();
@@ -121,6 +150,7 @@ export function BoardGallery({
 
     settleTimer.current = window.setTimeout(() => {
       setMotion("idle");
+      setSoftSizeBridge(false);
     }, SPIN_TRANSITION_MS + SPIN_SETTLE_MS);
   }
 
@@ -144,7 +174,9 @@ export function BoardGallery({
     <div
       className="board-selector"
       data-direction={transitionDirection}
+      data-drift={drifting ? "true" : "false"}
       data-motion={motion}
+      data-soft-size-bridge={softSizeBridge ? "true" : "false"}
       ref={rootRef}
       tabIndex="0"
       onKeyDown={(event) => {
@@ -159,40 +191,46 @@ export function BoardGallery({
       }}
     >
       <div className="board-selector-stage" data-live={live}>
-        <img
-          className="board-selector-backdrop"
-          src={selectorBackground}
-          alt=""
-          width="1586"
-          height="992"
-          aria-hidden="true"
-        />
-        {theme === "dark" && turntableVideo ? (
-          <video
-            ref={videoRef}
-            className="board-selector-transition-video"
-            data-active={
-              motion === "spin-out" || motion === "spin-in" ? "true" : "false"
-            }
-            muted
-            playsInline
-            preload="auto"
-            aria-hidden="true"
-          >
-            <source src={turntableVideo} type="video/mp4" />
-          </video>
-        ) : null}
+        <div className="board-selector-media" aria-hidden="true">
+          <img
+            className="board-selector-backdrop"
+            src={selectorBackground}
+            alt=""
+            width="1586"
+            height="992"
+          />
+          {theme === "dark" && turntableVideo ? (
+            <video
+              ref={videoRef}
+              className="board-selector-transition-video"
+              data-active={
+                motion === "spin-out" || motion === "spin-in" ? "true" : "false"
+              }
+              muted
+              playsInline
+              preload={isCompact ? "metadata" : "auto"}
+              onLoadedData={isCompact ? undefined : primeTurntableVideo}
+              onEnded={isCompact ? undefined : finishTurntablePrime}
+            >
+              <source src={turntableVideo} type="video/mp4" />
+            </video>
+          ) : null}
+        </div>
         <div className="board-selector-vignette" aria-hidden="true" />
 
         <div className="board-selector-scene">
-          <img
-            src={board.image}
-            alt={board.alt}
-            className="selector-board-still"
-            data-active={!live}
-            width="1400"
-            height="1400"
-          />
+          {/* In a WebGL browser the flat render is not mounted at all, so it
+              cannot flash for one frame before the canvas becomes ready. */}
+          {!webGLAvailable ? (
+            <img
+              src={board.image}
+              alt={board.alt}
+              className="selector-board-still"
+              data-active="true"
+              width="1400"
+              height="1400"
+            />
+          ) : null}
 
           {show3D ? (
             <div className="selector-board-canvas" data-ready={modelReady}>
@@ -200,12 +238,13 @@ export function BoardGallery({
                 <BoardCanvas
                   autoRotate={false}
                   board={board}
-                  cameraZ={board.galleryCameraZ || (isCompact ? 6.9 : 6.25)}
+                  cameraZ={board.galleryCameraZ || (isCompact ? 7.45 : 6.25)}
                   compact={isCompact}
                   dracoPath={dracoPath}
-                  floating={!reducedMotion}
+                  floating={drifting}
                   onReady={handleModelReady}
                   orbit="free"
+                  preloadBoards={boards}
                   reducedMotion={reducedMotion}
                   theme={theme}
                   // The source platter turns clockwise for the right arrow;
@@ -229,7 +268,7 @@ export function BoardGallery({
           type="button"
           className="board-selector-arrow board-selector-arrow-prev"
           aria-label="Предыдущая разработка"
-          disabled={motion !== "idle"}
+          disabled={motion !== "idle" || !transitionReady}
           onClick={() => moveBy(-1)}
         >
           <span aria-hidden="true">‹</span>
@@ -238,7 +277,7 @@ export function BoardGallery({
           type="button"
           className="board-selector-arrow board-selector-arrow-next"
           aria-label="Следующая разработка"
-          disabled={motion !== "idle"}
+          disabled={motion !== "idle" || !transitionReady}
           onClick={() => moveBy(1)}
         >
           <span aria-hidden="true">›</span>
@@ -271,7 +310,7 @@ export function BoardGallery({
               key={item.title}
               aria-label={item.title}
               aria-current={index === activeIndex ? "true" : undefined}
-              disabled={motion !== "idle"}
+              disabled={motion !== "idle" || !transitionReady}
               onClick={() => selectBoard(index)}
               onPointerEnter={() => warm3D(item.model)}
             >
