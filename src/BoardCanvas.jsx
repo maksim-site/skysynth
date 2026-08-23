@@ -15,6 +15,7 @@ export function BoardCanvas({
   dracoPath,
   floating,
   onReady,
+  onPreloadReady,
   orbit,
   preloadBoards,
   reducedMotion,
@@ -34,14 +35,15 @@ export function BoardCanvas({
         powerPreference: "high-performance",
       }}
     >
-      {preloadBoards?.length ? (
-        <Suspense fallback={null}>
+      {preloadBoards?.map((preloadBoard) => (
+        <Suspense fallback={null} key={preloadBoard.model}>
           <BoardModelPreloader
-            boards={preloadBoards}
+            board={preloadBoard}
             dracoPath={dracoPath}
+            onReady={onPreloadReady}
           />
         </Suspense>
-      ) : null}
+      ))}
       <BoardScene
         autoRotate={autoRotate}
         board={board}

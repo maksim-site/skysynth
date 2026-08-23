@@ -1,4 +1,12 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
 
 const BoardCanvas = lazy(() => import("./BoardCanvas.jsx"));
@@ -21,7 +29,8 @@ export function BoardGallery({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const inView = true;
-  const [readyModel, setReadyModel] = useState(null);
+  const [readyModels, setReadyModels] = useState(() => new Set());
+  const [pendingMove, setPendingMove] = useState(null);
   const [stageVisible, setStageVisible] = useState(false);
   const [videoPrimed, setVideoPrimed] = useState(theme !== "dark" || !turntableVideo);
   const [motion, setMotion] = useState("idle");
@@ -36,11 +45,45 @@ export function BoardGallery({
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const isCompact = useMediaQuery("(max-width: 900px)");
   const board = boards[activeIndex];
-  const modelReady = readyModel === board.model;
+  const modelReady = readyModels.has(board.model);
   const show3D = inView && webGLAvailable && Boolean(board.model);
   const live = show3D && modelReady;
   const transitionReady = !show3D || modelReady;
   const drifting = stageVisible && !reducedMotion;
+  const progressivePreloadBoards = useMemo(() => {
+    if (!modelReady) return [];
+    if (!isCompact) return boards;
+
+    // Once the current board is live, warm the remaining models in nearest-
+    // neighbour order. At most two new downloads start together, so mobile
+    // never starves the active model but a quick tap cannot reveal an empty
+    // canvas while the next GLB begins loading.
+    const ordered = [board];
+    const seen = new Set([board.model]);
+    for (let distance = 1; distance < boards.length; distance += 1) {
+      const candidates = [
+        boards[(activeIndex + distance) % boards.length],
+        boards[(activeIndex - distance + boards.length) % boards.length],
+      ];
+      candidates.forEach((candidate) => {
+        if (!seen.has(candidate.model)) {
+          seen.add(candidate.model);
+          ordered.push(candidate);
+        }
+      });
+    }
+
+    const scheduledCount = Math.min(
+      boards.length,
+      Math.max(3, readyModels.size + 2),
+    );
+    const scheduled = ordered.slice(0, scheduledCount);
+    const pendingBoard = pendingMove ? boards[pendingMove.nextIndex] : null;
+    if (pendingBoard && !scheduled.some((item) => item.model === pendingBoard.model)) {
+      scheduled.push(pendingBoard);
+    }
+    return scheduled;
+  }, [activeIndex, board, boards, isCompact, modelReady, pendingMove, readyModels]);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -63,28 +106,6 @@ export function BoardGallery({
   }, [board.model, dracoPath, inView, webGLAvailable]);
 
   useEffect(() => {
-    if (!inView || !webGLAvailable || !modelReady) return undefined;
-
-    if (!isCompact) {
-      boards.forEach((item) => preloadBoardModel(item.model, dracoPath));
-      return undefined;
-    }
-
-    const neighbours = [
-      boards[(activeIndex + 1) % boards.length],
-      boards[(activeIndex - 1 + boards.length) % boards.length],
-    ];
-    const timers = neighbours.map((item, index) =>
-      window.setTimeout(
-        () => preloadBoardModel(item.model, dracoPath),
-        1200 + index * 1800,
-      ),
-    );
-
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [activeIndex, boards, dracoPath, inView, isCompact, modelReady, webGLAvailable]);
-
-  useEffect(() => {
     // A light-theme visit does not mount the dark transition clip. Prime it
     // again after a later theme change before enabling the first dark turn.
     setVideoPrimed(theme !== "dark" || !turntableVideo);
@@ -101,7 +122,13 @@ export function BoardGallery({
   );
 
   const handleModelReady = useCallback((model) => {
-    setReadyModel(model);
+    if (!model) return;
+    setReadyModels((current) => {
+      if (current.has(model)) return current;
+      const next = new Set(current);
+      next.add(model);
+      return next;
+    });
   }, []);
 
   const primeTurntableVideo = useCallback(() => {
@@ -144,34 +171,61 @@ export function BoardGallery({
     });
   }, [theme]);
 
-  function moveTo(nextIndex, direction) {
-    if (motion !== "idle" || !transitionReady || nextIndex === activeIndex) return;
+  const beginTransition = useCallback(
+    (nextIndex, direction) => {
+      if (reducedMotion) {
+        setActiveIndex(nextIndex);
+        return;
+      }
 
-    if (reducedMotion) {
-      setActiveIndex(nextIndex);
+      setSoftSizeBridge(Math.abs(nextIndex - activeIndex) === boards.length - 1);
+      setTransitionDirection(direction >= 0 ? 1 : -1);
+      setMotion("spin-out");
+      startTurntableRamp();
+
+      swapTimer.current = window.setTimeout(() => {
+        setActiveIndex(nextIndex);
+        setMotion("spin-in");
+      }, SPIN_SWAP_MS);
+
+      transitionTimer.current = window.setTimeout(() => {
+        setMotion("settle");
+        videoRef.current?.pause();
+      }, SPIN_TRANSITION_MS);
+
+      settleTimer.current = window.setTimeout(() => {
+        setMotion("idle");
+        setSoftSizeBridge(false);
+      }, SPIN_TRANSITION_MS + SPIN_SETTLE_MS);
+    },
+    [activeIndex, boards.length, reducedMotion, startTurntableRamp],
+  );
+
+  useEffect(() => {
+    if (!pendingMove || motion !== "idle") return;
+    const target = boards[pendingMove.nextIndex];
+    if (show3D && !readyModels.has(target.model)) return;
+
+    const queued = pendingMove;
+    setPendingMove(null);
+    beginTransition(queued.nextIndex, queued.direction);
+  }, [beginTransition, boards, motion, pendingMove, readyModels, show3D]);
+
+  function moveTo(nextIndex, direction) {
+    if (
+      motion !== "idle" ||
+      pendingMove ||
+      !transitionReady ||
+      nextIndex === activeIndex
+    ) return;
+
+    const target = boards[nextIndex];
+    warm3D(target?.model);
+    if (show3D && !readyModels.has(target.model)) {
+      setPendingMove({ nextIndex, direction });
       return;
     }
-
-    warm3D(boards[nextIndex]?.model);
-    setSoftSizeBridge(Math.abs(nextIndex - activeIndex) === boards.length - 1);
-    setTransitionDirection(direction >= 0 ? 1 : -1);
-    setMotion("spin-out");
-    startTurntableRamp();
-
-    swapTimer.current = window.setTimeout(() => {
-      setActiveIndex(nextIndex);
-      setMotion("spin-in");
-    }, SPIN_SWAP_MS);
-
-    transitionTimer.current = window.setTimeout(() => {
-      setMotion("settle");
-      videoRef.current?.pause();
-    }, SPIN_TRANSITION_MS);
-
-    settleTimer.current = window.setTimeout(() => {
-      setMotion("idle");
-      setSoftSizeBridge(false);
-    }, SPIN_TRANSITION_MS + SPIN_SETTLE_MS);
+    beginTransition(nextIndex, direction);
   }
 
   function moveBy(delta) {
@@ -196,6 +250,7 @@ export function BoardGallery({
       data-direction={transitionDirection}
       data-drift={drifting ? "true" : "false"}
       data-motion={motion}
+      data-pending={pendingMove ? "true" : "false"}
       data-soft-size-bridge={softSizeBridge ? "true" : "false"}
       ref={rootRef}
       tabIndex="0"
@@ -263,8 +318,9 @@ export function BoardGallery({
                   dracoPath={dracoPath}
                   floating={drifting}
                   onReady={handleModelReady}
+                  onPreloadReady={handleModelReady}
                   orbit="free"
-                  preloadBoards={isCompact ? undefined : boards}
+                  preloadBoards={progressivePreloadBoards}
                   reducedMotion={reducedMotion}
                   theme={theme}
                   // The source platter turns clockwise for the right arrow;
@@ -288,7 +344,7 @@ export function BoardGallery({
           type="button"
           className="board-selector-arrow board-selector-arrow-prev"
           aria-label="Предыдущая разработка"
-          disabled={motion !== "idle" || !transitionReady}
+          disabled={motion !== "idle" || Boolean(pendingMove) || !transitionReady}
           onClick={() => moveBy(-1)}
         >
           <span aria-hidden="true">‹</span>
@@ -297,7 +353,7 @@ export function BoardGallery({
           type="button"
           className="board-selector-arrow board-selector-arrow-next"
           aria-label="Следующая разработка"
-          disabled={motion !== "idle" || !transitionReady}
+          disabled={motion !== "idle" || Boolean(pendingMove) || !transitionReady}
           onClick={() => moveBy(1)}
         >
           <span aria-hidden="true">›</span>
@@ -307,10 +363,10 @@ export function BoardGallery({
           {isCompact ? "Проведите по плате" : "Плату можно вращать во все стороны"}
         </p>
 
-        {show3D && !modelReady ? (
+        {show3D && (!modelReady || pendingMove) ? (
           <p className="board-selector-loading" role="status" aria-live="polite">
             <span aria-hidden="true" />
-            Загружаем 3D
+            {modelReady ? "Готовим следующую плату" : "Загружаем 3D"}
           </p>
         ) : null}
 
@@ -330,7 +386,7 @@ export function BoardGallery({
               key={item.title}
               aria-label={item.title}
               aria-current={index === activeIndex ? "true" : undefined}
-              disabled={motion !== "idle" || !transitionReady}
+              disabled={motion !== "idle" || Boolean(pendingMove) || !transitionReady}
               onClick={() => selectBoard(index)}
               onPointerEnter={() => warm3D(item.model)}
             >

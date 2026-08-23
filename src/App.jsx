@@ -17,7 +17,6 @@ import {
   Sun,
 } from "lucide-react";
 import { useCookieChoice, useMetrika, useReveal, useScrolled } from "./useReveal.js";
-import { Faq } from "./Faq.jsx";
 import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
 
 const HeroBoardExperience = lazy(() =>
@@ -279,37 +278,31 @@ const leadServiceBlocks = [
 
 const services = [
   {
-    number: "01",
     title: "Проектирование печатных плат",
     text: "Трассируем многослойные платы, ВЧ-цепи и силовые линии. Выпускаем Gerber, сверловку и требования к изготовлению.",
     icon: CircuitBoard,
   },
   {
-    number: "02",
     title: "Высокочастотные узлы и тракты",
     text: "Проектируем СВЧ-узлы и тракты, считаем и разводим цепи с контролируемым волновым сопротивлением.",
     icon: RadioTower,
   },
   {
-    number: "03",
     title: "Электроника для БПЛА",
     text: "Проектируем полётные контроллеры, ESC, видеопередатчики и каналы связи с учётом вибраций, тепла и габаритов корпуса.",
     icon: Plane,
   },
   {
-    number: "04",
     title: "Встраиваемое ПО",
     text: "Разрабатываем программное обеспечение для встраиваемых систем. Прошивка и плата проектируются под один набор требований.",
     icon: Cpu,
   },
   {
-    number: "05",
     title: "Документация по ЕСКД",
     text: "Готовим схемы по ТЗ, сборочные чертежи и спецификации по ЕСКД; ведём изменения КД на всех этапах.",
     icon: FileText,
   },
   {
-    number: "06",
     title: "Библиотеки и импортозамещение",
     text: "Ведём библиотеки Altium Designer: УГО, посадочные места и 3D-модели. Подбираем элементную базу с учётом доступности.",
     icon: Library,
@@ -368,17 +361,6 @@ const deliverables = [
   {
     title: "Сопровождение производства",
     text: "Изменения в КД по результатам испытаний и запросам заказчика.",
-  },
-];
-
-const faqItems = [
-  {
-    q: "Можно заказать только один этап, без всей разработки?",
-    a: "Да. Можно заказать отдельную работу, например топологию платы или комплект конструкторской документации.",
-  },
-  {
-    q: "Что нужно прислать, чтобы начать разговор?",
-    a: "Описание устройства или текущей задачи: назначение, условия работы, требования к габаритам, питанию и интерфейсам. Если есть техническое задание, схемы или файлы, присылайте их письмом на info@skysinth.com.",
   },
 ];
 
@@ -846,12 +828,11 @@ export function App() {
             </p>
             <div className="service-list">
               {services.map((service) => (
-                <article className="service-row" data-reveal="out" key={service.number}>
+                <article className="service-row" data-reveal="out" key={service.title}>
                   <span className="service-icon" aria-hidden="true">
                     <service.icon size={20} strokeWidth={1.5} />
                   </span>
                   <div className="service-head">
-                    <p className="item-number">{service.number}</p>
                     <h3>{service.title}</h3>
                   </div>
                   <div className="service-body">
@@ -948,25 +929,6 @@ export function App() {
                 </article>
               ))}
             </div>
-          </div>
-        </section>
-
-        <section className="section faq-section" id="faq">
-          <div className="section-shell">
-            <div className="section-heading-row section-heading-with-copy" data-reveal="out">
-              <div>
-                <p className="eyebrow">Вопросы</p>
-                <h2>
-                  Что <em>спрашивают</em> перед началом
-                </h2>
-              </div>
-              <p className="section-intro">
-                Если нужного вопроса здесь нет, напишите на {CONTACT_EMAIL}, мы
-                ответим по существу.
-              </p>
-            </div>
-
-            <Faq items={faqItems} />
           </div>
         </section>
 
@@ -1102,7 +1064,6 @@ export function App() {
               </a>
             ))}
             <a href="#reverse">Реверс-инжиниринг</a>
-            <a href="#faq">Вопросы</a>
           </nav>
           <div className="footer-legal">
             <p>

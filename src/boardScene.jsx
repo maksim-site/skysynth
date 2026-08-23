@@ -130,20 +130,16 @@ function PreparedBoard({ baseRotation = 0.29, board, dracoPath, onReady }) {
   );
 }
 
-export function BoardModelPreloader({ boards, dracoPath, onReady }) {
+export function BoardModelPreloader({ board, dracoPath, onReady }) {
   const groupRef = useRef(null);
   const warmFrameRef = useRef(0);
   const invalidate = useThree((state) => state.invalidate);
-  const models = useMemo(() => boards.map((board) => board.model), [boards]);
-  const loaded = useGLTF(models, dracoPath);
-  const prepared = useMemo(
-    () => boards.map((board, index) => prepareBoard(board, loaded[index].scene)),
-    [boards, loaded],
-  );
+  const { scene } = useGLTF(board.model, dracoPath);
+  const prepared = useMemo(() => prepareBoard(board, scene), [board, scene]);
 
   useEffect(() => {
-    onReady?.();
-  }, [onReady, prepared]);
+    onReady?.(board.model);
+  }, [board.model, onReady, prepared]);
 
   useFrame(() => {
     if (!groupRef.current?.visible) return;
@@ -157,20 +153,13 @@ export function BoardModelPreloader({ boards, dracoPath, onReady }) {
     invalidate();
   });
 
-  // Loading a GLB only parses it on the CPU. These almost-zero-size instances
-  // force the renderer to upload every geometry and compile every material in
-  // advance, so the first 6 -> 7 or 7 -> 1 turn cannot stall mid-ramp.
+  // Loading a GLB only parses it on the CPU. This almost-zero-size instance
+  // also uploads its geometry and compiles its materials before selection.
   return (
     <group ref={groupRef} scale={0.00001} position={[0, 0, 0]}>
-      {prepared.map((item, index) => (
-        <group
-          key={boards[index].model}
-          rotation={item.rotation}
-          scale={item.scale}
-        >
-          <primitive object={item.object} />
-        </group>
-      ))}
+      <group rotation={prepared.rotation} scale={prepared.scale}>
+        <primitive object={prepared.object} />
+      </group>
     </group>
   );
 }
@@ -557,7 +546,7 @@ export function BoardScene({
         // The wheel belongs to the page, not to the board.
         enableZoom={false}
         dampingFactor={0.075}
-        rotateSpeed={0.48}
+        rotateSpeed={compact ? 0.78 : 0.48}
         target={[0, 0, 0]}
         {...limits}
       />
