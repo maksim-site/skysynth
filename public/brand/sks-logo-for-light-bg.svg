@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1311 355" role="img" aria-labelledby="title desc">
+  <title id="title">SKS logo for light backgrounds</title>
+  <desc id="desc">SKS wordmark constructed as continuous electronic traces with connector pads.</desc>
+  <defs>
+    <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1311" y2="355">
+      <stop offset="0" stop-color="#E2C58F"/>
+      <stop offset="0.5" stop-color="#B98450"/>
+      <stop offset="1" stop-color="#E2C58F"/>
+    </linearGradient>
+    <linearGradient id="circuit" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1311" y2="355">
+      <stop offset="0" stop-color="#A85C44"/>
+      <stop offset="1" stop-color="#754034"/>
+    </linearGradient>
+    <g id="s-unit">
+      <path d="M297 40H92C23 40 23 176 92 176H315C397 176 397 315 315 315H117"
+        fill="none" stroke="url(#body)" stroke-width="80" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path d="M297 40H92C23 40 23 176 92 176H315C397 176 397 315 315 315H117"
+        fill="none" stroke="url(#circuit)" stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <g fill="url(#circuit)">
+        <rect x="306" y="4" width="72" height="25" rx="1"/>
+        <rect x="306" y="42" width="72" height="25" rx="1"/>
+        <rect x="37" y="285" width="68" height="25" rx="1"/>
+        <rect x="37" y="324" width="68" height="25" rx="1"/>
+      </g>
+    </g></defs>
+  <use href="#s-unit"/>
+
+    <g aria-label="K">
+      <path d="M551 30L551 325Q551 355 521 355L501 355Q471 355 471 325L471 30Q471 0 501 0L521 0Q551 0 551 30ZM535.057 138.816L766.38 6.287Q792.411 -8.627 807.324 17.404L817.266 34.758Q832.18 60.788 806.149 75.702L574.826 208.231Q548.795 223.144 533.882 197.113L523.94 179.76Q509.026 153.729 535.057 138.816ZM574.826 146.769L806.149 279.298Q832.18 294.212 817.266 320.242L807.324 337.596Q792.411 363.627 766.38 348.713L535.057 216.184Q509.026 201.271 523.94 175.24L533.882 157.887Q548.795 131.856 574.826 146.769Z" fill="url(#body)" fill-rule="nonzero"/>
+
+        <path d="M511 20V335" fill="none" stroke="url(#circuit)" stroke-width="10" stroke-linecap="butt"/>
+        <path d="M511 177.5H548L784 42.292M548 177.5L784 312.708" fill="none" stroke="url(#circuit)" stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+
+    </g>
+  <use href="#s-unit" transform="translate(895 0)"/>
+</svg>

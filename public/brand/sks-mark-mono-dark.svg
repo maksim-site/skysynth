@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-18 -30 452 415" role="img" aria-labelledby="title desc">
+  <title id="title">SKS S mark</title>
+  <desc id="desc">Compact S-shaped electronic trace mark with connector pads.</desc>
+
+  <defs>
+    <g id="s-unit">
+      <path d="M297 40H92C23 40 23 176 92 176H315C397 176 397 315 315 315H117"
+        fill="none" stroke="#171B1E" stroke-width="80" stroke-linecap="butt" stroke-linejoin="round"/>
+
+      <g fill="#171B1E">
+        <rect x="306" y="4" width="72" height="25" rx="1"/>
+        <rect x="306" y="42" width="72" height="25" rx="1"/>
+        <rect x="37" y="285" width="68" height="25" rx="1"/>
+        <rect x="37" y="324" width="68" height="25" rx="1"/>
+      </g>
+    </g></defs>
+  <use href="#s-unit"/>
+</svg>
