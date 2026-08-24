@@ -3619,6 +3619,17 @@ h2,
   border-color: var(--line-2);
 }
 
+.project-form input:focus-visible,
+.project-form textarea:focus-visible {
+  outline: 0;
+  border-color: var(--focus);
+  box-shadow: inset 0 0 0 1px var(--focus);
+}
+
+.project-form {
+  scroll-margin-top: calc(var(--cap-h) + var(--cap-top) + 18px);
+}
+
 .project-form .button {
   width: 100%;
 }
@@ -7906,19 +7917,44 @@ h2,
     overflow: hidden;
   }
 
-  .hero-mobile-scene img {
+  .hero-mobile-stage {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    display: block;
+    width: min(106vw, 417px);
+    height: auto;
+    aspect-ratio: 1085 / 1450;
+    transform: translateX(-50%);
+  }
+
+  .hero-mobile-stage img {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center 54%;
-    filter: brightness(0.46) contrast(1.14) saturate(0.72);
-    transform: scale(1.015);
+    object-fit: contain;
+    object-position: center;
+    filter: brightness(0.82) contrast(1.12) saturate(0.72);
+    transform: none;
+  }
+
+  .hero-mobile-board {
+    position: absolute;
+    z-index: 4;
+    top: 13%;
+    left: 50%;
+    width: min(84vw, 330px);
+    height: auto;
+    max-width: none;
+    transform: translateX(-50%) rotate(-16.5deg);
+    transform-origin: center;
+    filter: brightness(0.76) contrast(1.14) saturate(0.88)
+      drop-shadow(0 18px 28px rgba(0, 0, 0, 0.56));
   }
 
   .hero-visual::after {
     background:
-      linear-gradient(180deg, rgba(8, 9, 10, 0.78) 0%, rgba(8, 9, 10, 0.46) 24%, rgba(8, 9, 10, 0.7) 66%, var(--bg) 100%),
+      linear-gradient(180deg, rgba(8, 9, 10, 0.72) 0%, rgba(8, 9, 10, 0.38) 24%, rgba(8, 9, 10, 0.68) 66%, var(--bg) 100%),
       linear-gradient(90deg, rgba(8, 9, 10, 0.5) 0%, rgba(8, 9, 10, 0.12) 72%, rgba(8, 9, 10, 0.28) 100%);
   }
 
@@ -7959,13 +7995,27 @@ h2,
     background: transparent;
   }
 
-  :root[data-theme="light"] .hero-mobile-scene img {
-    filter: brightness(0.84) contrast(1.05) saturate(0.68);
+  :root[data-theme="light"] .hero-mobile-stage img {
+    filter: brightness(0.82) contrast(1.06) saturate(0.62);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 78%, rgba(0, 0, 0, 0.94) 84%, rgba(0, 0, 0, 0.5) 92%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 78%, rgba(0, 0, 0, 0.94) 84%, rgba(0, 0, 0, 0.5) 92%, transparent 100%);
+  }
+
+  :root[data-theme="light"] .hero-mobile-stage {
+    top: -8px;
+  }
+
+  :root[data-theme="light"] .hero-mobile-board {
+    z-index: 4;
+    top: 13%;
+    filter: brightness(0.8) contrast(1.56) saturate(1.02)
+      drop-shadow(0 4px 3px rgba(24, 28, 26, 0.2))
+      drop-shadow(0 18px 24px rgba(34, 39, 36, 0.25));
   }
 
   :root[data-theme="light"] .hero-visual::after {
     background:
-      linear-gradient(180deg, rgba(213, 216, 212, 0.82) 0%, rgba(213, 216, 212, 0.5) 24%, rgba(213, 216, 212, 0.72) 66%, var(--bg) 100%),
+      linear-gradient(180deg, rgba(213, 216, 212, 0.56) 0%, rgba(213, 216, 212, 0.2) 24%, rgba(213, 216, 212, 0.58) 66%, var(--bg) 100%),
       linear-gradient(90deg, rgba(213, 216, 212, 0.58) 0%, rgba(213, 216, 212, 0.12) 72%, rgba(213, 216, 212, 0.34) 100%);
   }
 
@@ -7977,6 +8027,42 @@ h2,
     background:
       linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 68%, transparent) 13%, transparent 34%, transparent 64%, color-mix(in srgb, var(--bg) 72%, transparent) 84%, var(--bg) 100%),
       linear-gradient(90deg, color-mix(in srgb, var(--bg) 70%, transparent) 0%, transparent 24%, transparent 76%, color-mix(in srgb, var(--bg) 70%, transparent) 100%);
+  }
+
+  .deliverables-section .section-shell {
+    padding-bottom: 24px;
+  }
+
+  .contact-band {
+    height: 136px;
+  }
+
+  .contact-band .contact-band-photo {
+    top: 44%;
+    bottom: auto;
+    width: 118%;
+    height: auto;
+    aspect-ratio: 2172 / 724;
+    object-fit: contain;
+    object-position: center;
+    transform: translate(-50%, -50%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 9%, #000 92%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 9%, #000 92%, transparent 100%);
+  }
+
+  .contact-band::before {
+    height: 28%;
+    filter: blur(5px);
+  }
+
+  .contact-band::after {
+    height: 22%;
+    filter: blur(2px);
+    background: linear-gradient(0deg, var(--deep) 0%, color-mix(in srgb, var(--deep) 72%, transparent) 28%, transparent 100%);
+  }
+
+  .contact-section .section-shell {
+    padding-top: 32px;
   }
 }
 
@@ -8053,6 +8139,17 @@ h2,
   .board-selector-media .board-selector-transition-video {
     -webkit-mask-image: radial-gradient(ellipse 32% 12% at 50% 76%, #000 0%, rgba(0, 0, 0, 0.98) 48%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.28) 86%, transparent 100%);
     mask-image: radial-gradient(ellipse 32% 12% at 50% 76%, #000 0%, rgba(0, 0, 0, 0.98) 48%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.28) 86%, transparent 100%);
+  }
+
+  :root[data-theme="light"] .board-selector-vignette {
+    background:
+      linear-gradient(180deg, transparent 0%, transparent 76%, color-mix(in srgb, var(--deep) 46%, transparent) 90%, var(--deep) 100%),
+      linear-gradient(90deg, color-mix(in srgb, var(--bg) 34%, transparent), transparent 22%, transparent 78%, color-mix(in srgb, var(--bg) 34%, transparent));
+  }
+
+  :root[data-theme="light"] .board-selector-media {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.16) 5%, rgba(0, 0, 0, 0.6) 12%, #000 22%, #000 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.16) 5%, rgba(0, 0, 0, 0.6) 12%, #000 22%, #000 100%);
   }
 }
 
@@ -8425,6 +8522,25 @@ body.site-loading {
   background: rgba(242, 243, 239, 0.98);
   box-shadow: 0 24px 64px rgba(41, 47, 44, 0.18);
   color: #111514;
+}
+
+:root[data-theme="light"] .board-selector-info-button {
+  border-color: rgba(127, 80, 13, 0.34);
+  background: #f8f8f4;
+  box-shadow:
+    0 8px 20px rgba(41, 47, 44, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.78);
+  color: #6d4c0d;
+}
+
+:root[data-theme="light"] .board-selector-info-button:hover,
+:root[data-theme="light"] .board-selector-info-button[aria-expanded="true"] {
+  border-color: rgba(127, 80, 13, 0.62);
+  background: #fff;
+  box-shadow:
+    0 10px 24px rgba(41, 47, 44, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.92);
+  color: #4f3508;
 }
 
 :root[data-theme="light"] .board-selector-info-card > p:last-child {

@@ -77,11 +77,6 @@ const heroAssets = {
   },
 };
 
-const heroMobileScenes = {
-  dark: assetPath("assets/images/hero-concept-dark.webp"),
-  light: assetPath("assets/images/hero-concept-light.webp"),
-};
-
 const sectionImages = {
   reverse: {
     dark: assetPath("assets/images/sections/reverse-engineering-scene-final.webp"),
@@ -140,7 +135,7 @@ function preloadThemeImages(themeName) {
     logoAssets[themeName],
     heroAssets[themeName].desktop,
     heroAssets[themeName].mobile,
-    heroMobileScenes[themeName],
+    heroBoards[0].image,
     sectionImages.reverse[themeName],
     sceneAssets.selector[themeName],
     sceneAssets.contactPanorama[themeName],
@@ -410,17 +405,16 @@ export function App() {
     const compactHero = window.matchMedia("(max-width: 620px)").matches;
     const maximumDisplayMs = compactHero ? 3600 : 2200;
     const narrowHero = window.matchMedia("(max-width: 860px)").matches;
-    const currentHero = compactHero
-      ? heroMobileScenes[theme]
-      : narrowHero
-        ? heroAssets[theme].mobile
-        : heroAssets[theme].desktop;
+    const currentHero = narrowHero
+      ? heroAssets[theme].mobile
+      : heroAssets[theme].desktop;
 
     document.body.classList.add("site-loading");
 
     const criticalAssets = Promise.all([
       preloadThemeImage(logoAssets[theme]),
       preloadThemeImage(currentHero),
+      preloadThemeImage(heroBoards[0].image),
       preloadCriticalFonts(),
     ]);
 
@@ -682,7 +676,7 @@ export function App() {
                 {item.label}
               </a>
             ))}
-            <a className="site-nav-cta" href="#contact" onClick={closeMenu}>
+            <a className="site-nav-cta" href="#project-form" onClick={closeMenu}>
               Оставить заявку
             </a>
           </nav>
@@ -755,15 +749,25 @@ export function App() {
 
           <div className="hero-visual">
             {isCompact ? (
-              <picture className="hero-mobile-scene" aria-hidden="true">
+              <div className="hero-mobile-scene" aria-hidden="true">
+                <picture className="hero-mobile-stage">
+                  <img
+                    src={heroAsset.mobile}
+                    alt=""
+                    width="1085"
+                    height="1450"
+                    fetchPriority="high"
+                  />
+                </picture>
                 <img
-                  src={heroMobileScenes[theme]}
+                  className="hero-mobile-board"
+                  src={heroBoards[0].image}
                   alt=""
-                  width="1086"
-                  height="1448"
+                  width="1600"
+                  height="1600"
                   fetchPriority="high"
                 />
-              </picture>
+              </div>
             ) : (
               <Suspense
                 fallback={
@@ -964,7 +968,7 @@ export function App() {
               </dl>
             </div>
 
-            <form className="project-form" onSubmit={handleSubmit}>
+            <form className="project-form" id="project-form" onSubmit={handleSubmit}>
               <div className="form-row">
                 <label>
                   <span>Имя</span>
