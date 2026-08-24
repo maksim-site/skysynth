@@ -8211,8 +8211,22 @@ body.site-loading {
 }
 
 @media (min-width: 621px) {
+  .services-section {
+    position: relative;
+    z-index: 2;
+    background: var(--bg);
+  }
+
+  .services-section .section-shell {
+    padding-bottom: 0;
+  }
+
+  .reverse-section {
+    margin-top: -60px;
+  }
+
   .reverse-media {
-    transform: translate(-50%, -36px);
+    transform: translateX(-50%);
   }
 
   .reverse-media img {
