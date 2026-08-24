@@ -36,8 +36,10 @@ export function BoardGallery({
   const [motion, setMotion] = useState("idle");
   const [softSizeBridge, setSoftSizeBridge] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState(1);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [webGLAvailable] = useState(supportsWebGL);
   const rootRef = useRef(null);
+  const infoRef = useRef(null);
   const transitionTimer = useRef(null);
   const settleTimer = useRef(null);
   const swapTimer = useRef(null);
@@ -111,6 +113,21 @@ export function BoardGallery({
     // again after a later theme change before enabling the first dark turn.
     setVideoPrimed(theme !== "dark" || !turntableVideo);
   }, [theme, turntableVideo]);
+
+  useEffect(() => {
+    setInfoOpen(false);
+  }, [activeIndex]);
+
+  useEffect(() => {
+    if (!infoOpen) return undefined;
+
+    const closeOnOutsidePress = (event) => {
+      if (!infoRef.current?.contains(event.target)) setInfoOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePress);
+  }, [infoOpen]);
 
   useEffect(
     () => () => {
@@ -250,12 +267,17 @@ export function BoardGallery({
       className="board-selector"
       data-direction={transitionDirection}
       data-drift={drifting ? "true" : "false"}
+      data-info-open={infoOpen ? "true" : "false"}
       data-motion={motion}
       data-pending={pendingMove ? "true" : "false"}
       data-soft-size-bridge={softSizeBridge ? "true" : "false"}
       ref={rootRef}
       tabIndex="0"
       onKeyDown={(event) => {
+        if (event.key === "Escape" && infoOpen) {
+          event.preventDefault();
+          setInfoOpen(false);
+        }
         if (event.key === "ArrowLeft") {
           event.preventDefault();
           moveBy(-1);
@@ -375,7 +397,40 @@ export function BoardGallery({
 
         <div className="board-selector-meta" aria-live="polite">
           <div className="board-selector-heading">
-            <h3>{board.title}</h3>
+            <div className="board-selector-info" ref={infoRef}>
+              <div className="board-selector-title-row">
+                <h3 id={`board-title-${activeIndex}`}>{board.title}</h3>
+                <button
+                  type="button"
+                  className="board-selector-info-button"
+                  aria-label={`Описание платы ${board.title}`}
+                  aria-expanded={infoOpen}
+                  aria-controls={`board-info-${activeIndex}`}
+                  onClick={() => setInfoOpen((value) => !value)}
+                >
+                  <span aria-hidden="true">i</span>
+                </button>
+              </div>
+              {infoOpen ? (
+                <div
+                  className="board-selector-info-card"
+                  id={`board-info-${activeIndex}`}
+                  role="dialog"
+                  aria-labelledby={`board-title-${activeIndex}`}
+                >
+                  <button
+                    type="button"
+                    className="board-selector-info-close"
+                    aria-label="Закрыть описание"
+                    onClick={() => setInfoOpen(false)}
+                  >
+                    <span aria-hidden="true">×</span>
+                  </button>
+                  <p className="eyebrow">Описание платы</p>
+                  <p>{board.text}</p>
+                </div>
+              ) : null}
+            </div>
             <p className="board-selector-count">
               {String(activeIndex + 1).padStart(2, "0")} / {String(boards.length).padStart(2, "0")}
             </p>

@@ -7794,12 +7794,12 @@ h2,
 
   .hero {
     min-height: max(700px, 100svh);
-    align-items: center;
+    align-items: end;
     background: var(--bg);
   }
 
   .hero-copy {
-    align-self: center;
+    align-self: end;
     padding: calc(var(--cap-h) + var(--cap-top) + 54px) var(--pad) 42px;
   }
 
@@ -8211,6 +8211,10 @@ body.site-loading {
 }
 
 @media (min-width: 621px) {
+  .reverse-media {
+    transform: translate(-50%, -36px);
+  }
+
   .reverse-media img {
     transform: scale(0.98);
   }
@@ -8313,5 +8317,141 @@ body.site-loading {
 
   :root[data-theme="light"] .board-selector-loading {
     background: rgba(232, 233, 229, 0.78);
+  }
+}
+
+/* The title stays terse until the visitor asks for the client-supplied board
+   description. The on-demand note sits above the desktop caption and below
+   the mobile caption so it never becomes permanent weight over the model. */
+
+.board-selector-info {
+  position: relative;
+  min-width: 0;
+}
+
+.board-selector-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.board-selector-info-button,
+.board-selector-info-close {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(215, 189, 120, 0.42);
+  background: rgba(7, 8, 9, 0.72);
+  color: #d7bd78;
+  cursor: pointer;
+}
+
+.board-selector-info-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1;
+}
+
+.board-selector-info-button:hover,
+.board-selector-info-button[aria-expanded="true"] {
+  border-color: #d7bd78;
+  background: rgba(215, 189, 120, 0.12);
+  color: #f2efe8;
+}
+
+.board-selector-info-button:focus-visible,
+.board-selector-info-close:focus-visible {
+  outline: 2px solid #d7bd78;
+  outline-offset: 3px;
+}
+
+.board-selector-info-card {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 16px);
+  bottom: auto;
+  left: 0;
+  width: min(430px, calc(100vw - 2 * var(--pad)));
+  padding: 20px 52px 20px 20px;
+  border: 1px solid rgba(215, 189, 120, 0.28);
+  border-radius: 12px;
+  background: rgba(7, 8, 9, 0.96);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+  color: #f2efe8;
+}
+
+.board-selector-info-card .eyebrow {
+  margin: 0 0 9px;
+  color: #d7bd78;
+  font-size: 9px;
+}
+
+.board-selector-info-card > p:last-child {
+  margin: 0;
+  color: rgba(242, 239, 232, 0.78);
+  font-size: 14px;
+  line-height: 1.58;
+}
+
+.board-selector-info-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-color: transparent;
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1;
+}
+
+:root[data-theme="light"] .board-selector-info-card {
+  border-color: rgba(127, 80, 13, 0.28);
+  background: rgba(242, 243, 239, 0.98);
+  box-shadow: 0 24px 64px rgba(41, 47, 44, 0.18);
+  color: #111514;
+}
+
+:root[data-theme="light"] .board-selector-info-card > p:last-child {
+  color: rgba(17, 21, 20, 0.72);
+}
+
+:root[data-theme="light"] .board-selector-info-close {
+  background: transparent;
+  color: #7f500d;
+}
+
+@media (max-width: 620px) {
+  .board-selector[data-info-open="true"] .board-selector-arrow {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .board-selector-info-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .board-selector-info-card {
+    top: calc(100% + 12px);
+    width: min(340px, calc(100vw - 2 * var(--pad)));
+    padding: 18px 48px 18px 18px;
+  }
+
+  .board-selector-info-card > p:last-child {
+    font-size: 13.5px;
+    line-height: 1.54;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-selector-info-button,
+  .board-selector-info-close {
+    transition: none;
   }
 }
