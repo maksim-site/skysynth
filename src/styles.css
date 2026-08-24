@@ -8221,10 +8221,6 @@ body.site-loading {
     padding-bottom: 0;
   }
 
-  .reverse-section {
-    margin-top: -60px;
-  }
-
   .reverse-media {
     transform: translateX(-50%);
   }
