@@ -750,23 +750,25 @@ export function App() {
           <div className="hero-visual">
             {isCompact ? (
               <div className="hero-mobile-scene" aria-hidden="true">
-                <picture className="hero-mobile-stage">
+                <div className="hero-mobile-composite">
+                  <picture className="hero-mobile-stage">
+                    <img
+                      src={heroAsset.mobile}
+                      alt=""
+                      width="1085"
+                      height="1450"
+                      fetchPriority="high"
+                    />
+                  </picture>
                   <img
-                    src={heroAsset.mobile}
+                    className="hero-mobile-board"
+                    src={heroBoards[0].image}
                     alt=""
-                    width="1085"
-                    height="1450"
+                    width="1600"
+                    height="1600"
                     fetchPriority="high"
                   />
-                </picture>
-                <img
-                  className="hero-mobile-board"
-                  src={heroBoards[0].image}
-                  alt=""
-                  width="1600"
-                  height="1600"
-                  fetchPriority="high"
-                />
+                </div>
               </div>
             ) : (
               <Suspense

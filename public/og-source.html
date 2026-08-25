@@ -6,14 +6,19 @@
     <meta charset="UTF-8" />
     <style>
       @font-face {
-        font-family: "Manrope";
-        src: url("/assets/fonts/manrope-600.woff2") format("woff2");
-        font-weight: 600;
+        font-family: "Unbounded";
+        src: url("assets/fonts/unbounded-400-cyrillic.woff2") format("woff2");
+        font-weight: 400;
       }
       @font-face {
-        font-family: "Manrope";
-        src: url("/assets/fonts/manrope-800.woff2") format("woff2");
-        font-weight: 800;
+        font-family: "Unbounded";
+        src: url("assets/fonts/unbounded-500-cyrillic.woff2") format("woff2");
+        font-weight: 500;
+      }
+      @font-face {
+        font-family: "Golos Text";
+        src: url("assets/fonts/golos-text-600-cyrillic.woff2") format("woff2");
+        font-weight: 600;
       }
       * {
         box-sizing: border-box;
@@ -25,29 +30,30 @@
         overflow: hidden;
         position: relative;
         background: #080b0d;
-        font-family: "Manrope", sans-serif;
+        font-family: "Unbounded", sans-serif;
         color: #f2efe8;
       }
       .stage {
         position: absolute;
         inset: 0;
+        transform: translateX(42px);
       }
       .stage img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: 62% center;
+        object-position: 72% center;
       }
       /* Same board placement as the live hero composite, in og pixels. */
       .board {
         position: absolute;
-        top: 101px;
-        left: 600px;
-        width: 461px;
-        height: 461px;
+        top: 86px;
+        left: 630px;
+        width: 490px;
+        height: 490px;
         object-fit: contain;
         transform: rotate(-16.5deg) scale(0.96);
-        filter: brightness(0.72) contrast(1.16) saturate(1.08)
+        filter: brightness(1.12) contrast(1.18) saturate(1.08)
           drop-shadow(0 3px 2px rgba(0, 0, 0, 0.5))
           drop-shadow(0 11px 15px rgba(0, 0, 0, 0.3));
       }
@@ -64,21 +70,21 @@
       }
       .copy {
         position: absolute;
-        top: 92px;
+        top: 80px;
         left: 76px;
-        width: 620px;
+        width: 650px;
       }
       .logo {
-        height: 42px;
+        height: 40px;
         width: auto;
-        margin-bottom: 44px;
+        margin-bottom: 42px;
       }
       h1 {
         margin: 0;
-        font-size: 60px;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        line-height: 1.04;
+        font-size: 49px;
+        font-weight: 400;
+        letter-spacing: -0.045em;
+        line-height: 1.08;
       }
       h1 span {
         display: block;
@@ -94,9 +100,10 @@
         gap: 14px;
         align-items: center;
         color: #9d9d96;
-        font-size: 17px;
+        font-family: "Golos Text", sans-serif;
+        font-size: 18px;
         font-weight: 600;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.02em;
       }
       .foot b {
         color: #f2efe8;
@@ -106,28 +113,26 @@
   </head>
   <body>
     <div class="stage">
-      <img src="/assets/images/hero-stage-dark-wide.webp" alt="" />
+      <img src="assets/images/hero-stage-dark-wide.webp" alt="" />
     </div>
     <img
       class="board"
-      src="/assets/images/boards/flight-controller-transparent.webp"
+      src="assets/images/boards/flight-controller-front-polished.webp"
       alt=""
     />
     <div class="veil"></div>
     <div class="copy">
-      <img class="logo" src="/brand/sks-logo-for-dark-bg.svg" alt="СКС" />
+      <img class="logo" src="brand/sks-logo-for-dark-bg.svg" alt="СКС" />
       <h1>
-        <span>Программно-аппаратные</span>
-        <span>комплексы</span>
-        <span>от схемы до серии</span>
+        <span>Разработка электроники</span>
+        <span>для сложных устройств</span>
+        <span>от идеи до производства</span>
       </h1>
     </div>
     <div class="foot">
       <b>СКАЙСИНТ ИНЖИНИРИНГ</b>
       <span>·</span>
-      <span>Санкт-Петербург</span>
-      <span>·</span>
-      <span>info@skysinth.com</span>
+      <span>Платы · Встраиваемое ПО · ЕСКД</span>
     </div>
   </body>
 </html>

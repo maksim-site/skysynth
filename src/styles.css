@@ -7917,6 +7917,12 @@ h2,
     overflow: hidden;
   }
 
+  .hero-mobile-composite {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 0;
+  }
+
   .hero-mobile-stage {
     position: absolute;
     top: -8px;
@@ -8063,6 +8069,60 @@ h2,
 
   .contact-section .section-shell {
     padding-top: 32px;
+  }
+}
+
+/* Telegram and other compact in-app browsers can expose a noticeably shorter
+   visual viewport than Safari at the same nominal phone size. Keep the normal
+   393 x 852 composition untouched. On genuinely short/narrow screens, scale
+   and raise the complete stage + PCB composite as one object. Keep the PCB
+   fully opaque and clear of the heading; only the quiet photographed stage
+   dissolves into the page behind the copy. */
+
+@media (max-width: 430px) and (max-height: 800px),
+  (max-width: 620px) and (max-height: 720px) {
+  .hero-mobile-composite {
+    z-index: 4;
+    transform: translateY(-7%) scale(0.88);
+  }
+
+  .hero-mobile-scene {
+    bottom: 0;
+    height: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  :root[data-theme] .hero-mobile-stage img {
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      #000 0%,
+      #000 62%,
+      rgba(0, 0, 0, 0.86) 72%,
+      rgba(0, 0, 0, 0.5) 82%,
+      rgba(0, 0, 0, 0.16) 91%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      180deg,
+      #000 0%,
+      #000 62%,
+      rgba(0, 0, 0, 0.86) 72%,
+      rgba(0, 0, 0, 0.5) 82%,
+      rgba(0, 0, 0, 0.16) 91%,
+      transparent 100%
+    );
+  }
+
+  .hero-mobile-board {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+@media (max-width: 620px) and (max-height: 690px) {
+  .hero-mobile-composite {
+    transform: translateY(-7%) scale(0.82);
   }
 }
 
