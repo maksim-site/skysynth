@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-18 -30 452 415" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-42 -8 500 371" role="img" aria-labelledby="title desc">
   <title id="title">SKS S mark</title>
   <desc id="desc">Compact S-shaped electronic trace mark with connector pads.</desc>
 
   <defs>
     <linearGradient id="body" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="416" y2="355">
-      <stop offset="0" stop-color="#D1845D"/>
-      <stop offset="0.5" stop-color="#A85A43"/>
-      <stop offset="1" stop-color="#D1845D"/>
+      <stop offset="0" stop-color="#F2D9A6"/>
+      <stop offset="0.5" stop-color="#CDA36A"/>
+      <stop offset="1" stop-color="#F2D9A6"/>
     </linearGradient>
     <linearGradient id="circuit" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="416" y2="355">
-      <stop offset="0" stop-color="#F4D9A6"/>
-      <stop offset="1" stop-color="#E3BC7F"/>
+      <stop offset="0" stop-color="#B96B4C"/>
+      <stop offset="1" stop-color="#8E4737"/>
     </linearGradient>
     <g id="s-unit">
       <path d="M297 40H92C23 40 23 176 92 176H315C397 176 397 315 315 315H117"
