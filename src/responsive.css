@@ -213,18 +213,22 @@
        the copy; a short viewport must not squeeze it into a narrow photo card.
        Reserve enough height for the PCB below the header and for Safari. */
     --phone-bottom-clearance: max(24px, env(safe-area-inset-bottom, 0px));
+    --phone-content-offset: 8px;
     --phone-scene-height: max(calc(68px + 56vw), clamp(280px,
       min(47svh, calc(100svh - 400px - var(--phone-bottom-clearance))), 402px));
     display: flex;
     flex-direction: column;
-    min-height: 100svh;
+    /* Keep Services below even the expanded viewport when Safari hides its
+       chrome. The reading block still uses svh, so it does not jump down. */
+    min-height: calc(100lvh + 24px);
     padding: 0;
   }
   #top .hero-visual { position: absolute; inset: 0; height: 100%; }
   #top .hero-copy {
-    min-height: 0;
-    margin: auto auto 0;
-    padding: calc(var(--phone-scene-height) + 22px) var(--pad)
+    min-height: calc(100svh + var(--phone-content-offset));
+    margin: 0 auto;
+    justify-content: flex-end;
+    padding: calc(var(--phone-scene-height) + 22px + var(--phone-content-offset)) var(--pad)
       max(42px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   }
   #top h1 { font-size: clamp(25px, 7.45vw, 31px); line-height: 1.04; }
@@ -232,7 +236,7 @@
   #top .hero-actions { margin-top: 16px; padding-top: 0; }
   #top .hero-actions .button { min-height: 44px; padding-inline: 21px; font-size: 14px; }
   #top .hero-mobile-composite, #top .hero-composite-stage {
-    top: min(-8px, calc(var(--phone-scene-height) - 93vw)); left: 50%;
+    top: calc(min(-8px, var(--phone-scene-height) - 93vw) + var(--phone-content-offset)); left: 50%;
     width: 100vw;
     height: auto;
     aspect-ratio: 1085 / 1450;
@@ -269,7 +273,7 @@
   }
   #top .hero-3d-note, #top .hero-3d-ui, #top .hero-model-loading {
     display: flex;
-    top: calc(var(--phone-scene-height) + 2px); bottom: auto;
+    top: calc(var(--phone-scene-height) + 2px + var(--phone-content-offset)); bottom: auto;
     left: var(--pad); right: var(--pad); margin: 0;
     justify-content: center;
     font-size: 9px; letter-spacing: .035em; line-height: 1.4;
@@ -280,6 +284,7 @@
     font-size: 10px;
   }
   #top .hero-3d-ui { display: none; }
+  #top + #services > .section-shell { padding-top: 56px; }
 }
 
 /* Expanded browser controls leave less reading space on short phones. Keep

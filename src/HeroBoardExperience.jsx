@@ -163,7 +163,8 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
         });
         timeline
           .to(zone, {
-            yPercent: isCompact ? -1.8 : -2.8,
+            // Phones need header clearance; depth/lighting still show the lift.
+            yPercent: isPhone ? -.4 : isCompact ? -1.8 : -2.8,
             scale: isCompact ? 1.014 : 1.024,
             duration: reducedMotion ? .01 : HERO_LIFT_SECONDS,
             ease: "power2.inOut",
