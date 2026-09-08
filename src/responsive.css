@@ -209,12 +209,12 @@
      and a room that recedes behind the text rather than a separate photo card.
      Both photographic layers share this single, continuously scaled frame. */
   #top.hero {
-    /* Reserve the reading block and a safe gap above Safari's expanded bar.
-       On shorter windows the whole scene scales proportionally; tall phones
-       retain the accepted 47svh composition. Very short screens still scroll. */
+    /* Size the scene by width, as in v1. Its lower, quiet room may sit behind
+       the copy; a short viewport must not squeeze it into a narrow photo card.
+       Reserve enough height for the PCB below the header and for Safari. */
     --phone-bottom-clearance: max(24px, env(safe-area-inset-bottom, 0px));
-    --phone-scene-height: clamp(250px,
-      min(47svh, calc(100svh - 414px - var(--phone-bottom-clearance))), 402px);
+    --phone-scene-height: max(calc(68px + 56vw), clamp(280px,
+      min(47svh, calc(100svh - 400px - var(--phone-bottom-clearance))), 402px));
     display: flex;
     flex-direction: column;
     min-height: 100svh;
@@ -228,12 +228,12 @@
       max(42px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   }
   #top h1 { font-size: clamp(25px, 7.45vw, 31px); line-height: 1.04; }
-  #top .hero-description { max-width: 100%; margin-top: 22px; font-size: 14.5px; line-height: 1.58; }
-  #top .hero-actions { margin-top: 20px; padding-top: 0; }
+  #top .hero-description { max-width: 100%; margin-top: 18px; font-size: 14.5px; line-height: 1.58; }
+  #top .hero-actions { margin-top: 16px; padding-top: 0; }
   #top .hero-actions .button { min-height: 44px; padding-inline: 21px; font-size: 14px; }
   #top .hero-mobile-composite, #top .hero-composite-stage {
-    top: -8px; left: 50%;
-    width: min(106vw, 417px, calc(var(--phone-scene-height) * 1.04));
+    top: min(-8px, calc(var(--phone-scene-height) - 93vw)); left: 50%;
+    width: 100vw;
     height: auto;
     aspect-ratio: 1085 / 1450;
     transform: translateX(-50%);
@@ -244,9 +244,8 @@
   }
   :root[data-theme] #top .hero-mobile-stage,
   :root[data-theme] #top .hero-stage-background {
-    /* Wide phones expose the photo's side margins. Fade only empty room;
-       the fixture is inside 12–88%, and the PCB is a separate sibling. */
-    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    /* The complete portrait photograph reaches both viewport edges. */
+    mask-image: none;
   }
   :root[data-theme="dark"] #top .hero-mobile-stage img,
   :root[data-theme="dark"] #top .hero-stage-background img { filter: brightness(.63) contrast(1.12) saturate(.72); }
@@ -281,6 +280,14 @@
     font-size: 10px;
   }
   #top .hero-3d-ui { display: none; }
+}
+
+/* Expanded browser controls leave less reading space on short phones. Keep
+   the full-width scene; tighten only the copy, with natural scroll below it. */
+@media (max-width: 539px) and (max-height: 700px) {
+  #top h1 { font-size: clamp(24px, calc(7.45vw - (720px - 100svh) * .05), 31px); }
+  #top .hero-description { margin-top: 16px; line-height: 1.5; }
+  #top .hero-actions { margin-top: 14px; }
 }
 
 /* A dropdown does not need an empty full-width capsule. Its panel retains
