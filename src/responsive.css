@@ -209,17 +209,23 @@
      and a room that recedes behind the text rather than a separate photo card.
      Both photographic layers share this single, continuously scaled frame. */
   #top.hero {
-    --phone-scene-height: clamp(310px, 47svh, 402px);
+    /* Reserve the reading block and a safe gap above Safari's expanded bar.
+       On shorter windows the whole scene scales proportionally; tall phones
+       retain the accepted 47svh composition. Very short screens still scroll. */
+    --phone-bottom-clearance: max(24px, env(safe-area-inset-bottom, 0px));
+    --phone-scene-height: clamp(250px,
+      min(47svh, calc(100svh - 414px - var(--phone-bottom-clearance))), 402px);
     display: flex;
     flex-direction: column;
-    min-height: max(700px, 100svh);
+    min-height: 100svh;
     padding: 0;
   }
   #top .hero-visual { position: absolute; inset: 0; height: 100%; }
   #top .hero-copy {
     min-height: 0;
     margin: auto auto 0;
-    padding: calc(var(--phone-scene-height) + 22px) var(--pad) 42px;
+    padding: calc(var(--phone-scene-height) + 22px) var(--pad)
+      max(42px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   }
   #top h1 { font-size: clamp(25px, 7.45vw, 31px); line-height: 1.04; }
   #top .hero-description { max-width: 100%; margin-top: 22px; font-size: 14.5px; line-height: 1.58; }
@@ -389,7 +395,8 @@
   }
   #services summary::-webkit-details-marker { display: none; }
   #services summary svg { flex-shrink: 0; width: 20px; height: 20px; transition: transform 180ms ease; }
-  #services details[open] > summary svg { transform: rotate(45deg); }
+  #services details[data-expanded="true"] > summary svg { transform: rotate(45deg); }
+  #services details[data-motion="instant"] > summary svg { transition: none; }
   #services summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
   #services .service-offering-details { margin: 0; padding: 8px 0 20px; border: 0; gap: 18px; }
   #services .service-directions-title { margin-top: 40px; }
