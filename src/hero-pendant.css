@@ -5,7 +5,10 @@
   pointer-events: none;
   overflow: clip;
   --pendant-level: 0.8;
+  opacity: 0;
+  transition: opacity 240ms ease;
 }
+.hero-pendant[data-ready="true"] { opacity: 1; }
 .hero-pendant-stage {
   position: absolute;
   top: var(--pendant-stage-top, 0px);
@@ -94,5 +97,6 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .hero-pendant { transition: none; }
   .hero-pendant-rig { will-change: auto; }
 }

@@ -23,6 +23,7 @@ const SPIN_SWAP_MS = 410;
  */
 export function BoardGallery({
   boards,
+  preloadEnabled = true,
   dracoPath,
   selectorBackground,
   theme,
@@ -69,8 +70,8 @@ export function BoardGallery({
   }, [activeIndex, isCompact]);
 
   const progressivePreloadBoards = useMemo(() => {
-    return selectWarmBoards(boards, activeIndex, readyModels, pendingMove?.nextIndex, motion === "idle");
-  }, [activeIndex, boards, motion, pendingMove, readyModels]);
+    return selectWarmBoards(boards, activeIndex, readyModels, pendingMove?.nextIndex, motion === "idle" && preloadEnabled);
+  }, [activeIndex, boards, motion, pendingMove, preloadEnabled, readyModels]);
 
   useEffect(() => {
     const node = rootRef.current;

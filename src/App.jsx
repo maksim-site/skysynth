@@ -20,12 +20,12 @@ import {
   Sun,
 } from "lucide-react";
 import { useCookieChoice, useMetrika, useReveal, useScrolled } from "./useReveal.js";
-import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
+import { preloadBoardModel, supportsWebGL } from "./media.js";
 import "./services.css";
 import { HIDDEN_PENDANT_QUERY, NARROW_HERO_QUERY } from "./heroLayout.js";
 import { transitionTheme } from "./themeTransition.js";
 import ServiceOffering from "./ServiceOffering.jsx";
-import HeroMobileScene from "./HeroMobileScene.jsx";
+import HeroStaticScene from "./HeroStaticScene.jsx";
 
 const loadHeroBoardExperience = () =>
   import("./HeroBoardExperience").then((module) => ({
@@ -404,20 +404,12 @@ function buildMailto(form) {
 
 export function App() {
   const shellRef = useRef(null);
-  const isPhoneHero = useMediaQuery(HIDDEN_PENDANT_QUERY);
   const [menuOpen, setMenuOpen] = useState(false);
   const [siteReady, setSiteReady] = useState(false);
   const [pendantEnabled, setPendantEnabled] = useState(true);
-  const [pendantStartup] = useState(() => {
-    const signal = { ready: false };
-    signal.promise = new Promise((resolve) => { signal.resolve = resolve; });
-    return signal;
-  });
   const handlePendantReady = useCallback((ready) => {
-    pendantStartup.ready = ready;
-    pendantStartup.resolve();
     if (!ready) setPendantEnabled(false);
-  }, [pendantStartup]);
+  }, []);
   const [formState, setFormState] = useState({ status: "idle", message: "" });
   const [themeSwitching, setThemeSwitching] = useState(false);
   const themeSwitchLock = useRef(false);
@@ -447,10 +439,9 @@ export function App() {
     const startedAt = performance.now();
     const compactHero = window.matchMedia(HIDDEN_PENDANT_QUERY).matches;
     const narrowHero = window.matchMedia(NARROW_HERO_QUERY).matches;
-    const needsPendant = !window.matchMedia(HIDDEN_PENDANT_QUERY).matches;
-    // This is a failure watchdog, not an extra intro delay. The complete
-    // desktop scene may need longer on a cold/slow connection.
-    const maximumDisplayMs = needsPendant ? 8000 : compactHero ? 3600 : 2200;
+    // Match the original first-screen budget. Optional scene preparation must
+    // never hold the page behind the logo; it continues independently.
+    const maximumDisplayMs = compactHero ? 3600 : 2200;
     const currentHero = narrowHero
       ? heroAssets[theme].mobile
       : heroAssets[theme].desktop;
@@ -462,8 +453,6 @@ export function App() {
       preloadThemeImage(currentHero),
       preloadThemeImage(heroBoards[0].image),
       preloadCriticalFonts(),
-      loadHeroBoardExperience().catch(() => undefined),
-      needsPendant ? pendantStartup.promise : null,
     ]);
 
     const timeout = new Promise((resolve) => {
@@ -478,9 +467,6 @@ export function App() {
       );
       revealTimer = window.setTimeout(() => {
         if (cancelled) return;
-        // If the optional layer failed/timed out, keep the original hero for
-        // this visit; never insert a late lamp after the loader has left.
-        if (needsPendant && !pendantStartup.ready) setPendantEnabled(false);
         document.body.classList.remove("site-loading");
         // Commit final viewport geometry and decoded image layers underneath
         // the still-opaque loader before starting its fade.
@@ -532,6 +518,7 @@ export function App() {
   }, [theme]);
 
   useEffect(() => {
+    if (!siteReady) return undefined;
     // On phones the active 3D board has priority over an alternate theme the
     // visitor may never request. The toggle already warms that theme on demand.
     if (window.matchMedia("(max-width: 620px)").matches) return undefined;
@@ -550,7 +537,7 @@ export function App() {
 
     const timerId = window.setTimeout(warmAlternateTheme, 120);
     return () => window.clearTimeout(timerId);
-  }, [theme]);
+  }, [siteReady, theme]);
 
   useEffect(() => {
     if (!supportsWebGL()) return undefined;
@@ -799,23 +786,7 @@ export function App() {
 
           <div className="hero-visual">
             <Suspense
-              fallback={isPhoneHero ? (
-                <HeroMobileScene background={heroAsset.mobile} board={heroBoards[0].image} />
-              ) : (
-                <div className="hero-media" aria-hidden="true">
-                  <picture>
-                    <source media={NARROW_HERO_QUERY} srcSet={heroAsset.mobile} />
-                    <img
-                      src={heroAsset.desktop}
-                      alt=""
-                      width="1586"
-                      height="992"
-                      fetchPriority="high"
-                      draggable={false}
-                    />
-                  </picture>
-                </div>
-              )}
+              fallback={<HeroStaticScene backgrounds={heroAsset} board={heroBoards[0].image} />}
             >
               <HeroBoardExperience
                 backgrounds={heroAsset}
@@ -893,6 +864,7 @@ export function App() {
           >
             <BoardGallery
               boards={boards}
+              preloadEnabled={siteReady}
               dracoPath={DRACO_PATH}
               selectorBackground={sceneAssets.selector[theme]}
               theme={theme}
