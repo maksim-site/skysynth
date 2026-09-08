@@ -555,48 +555,12 @@ export function App() {
   useEffect(() => {
     if (!supportsWebGL()) return undefined;
 
-    const compactViewport = window.matchMedia("(max-width: 620px)").matches;
-
-    // Warm the selector itself and its first GLB immediately after the initial
-    // paint. The remaining boards decode during idle time, before a fast scroll
-    // reaches the gallery, so the accepted still never flashes before WebGL.
+    // Give the shared hero/gallery model the network first. The gallery adds
+    // each neighbour only after the active model has finished its GPU warm-up.
+    // Idle callbacks alone do not wait for a download or decode to complete.
     void import("./BoardGallery.jsx");
     void import("./BoardCanvas.jsx");
     preloadBoardModel(boards[0]?.model, DRACO_PATH);
-
-    // A phone must finish the first 3.7 MB board before spending bandwidth and
-    // parse time on the other six models. The gallery schedules neighbours
-    // after the active model is actually ready.
-    if (compactViewport) return undefined;
-
-    // Decode the remaining GLBs one at a time. Starting all six together made
-    // the main thread hitch on slower phones even though the gallery itself is
-    // several sections below the fold.
-    let cancelled = false;
-    let idleId;
-    let timerId;
-    let nextIndex = 1;
-    const warmNext = () => {
-      if (cancelled || nextIndex >= boards.length) return;
-      preloadBoardModel(boards[nextIndex]?.model, DRACO_PATH);
-      nextIndex += 1;
-      scheduleNext();
-    };
-    const scheduleNext = () => {
-      if (cancelled || nextIndex >= boards.length) return;
-      if ("requestIdleCallback" in window) {
-        idleId = window.requestIdleCallback(warmNext, { timeout: 650 });
-      } else {
-        timerId = window.setTimeout(warmNext, 220);
-      }
-    };
-
-    scheduleNext();
-    return () => {
-      cancelled = true;
-      if (idleId !== undefined) window.cancelIdleCallback?.(idleId);
-      if (timerId !== undefined) window.clearTimeout(timerId);
-    };
   }, []);
 
   useEffect(() => {

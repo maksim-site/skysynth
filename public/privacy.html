@@ -120,10 +120,10 @@ a{color:var(--gold-soft)}
 a:hover{color:var(--fg)}
 .wrap{width:min(100%,860px);margin:0 auto;padding:0 var(--pad)}
 header{border-bottom:1px solid var(--line)}
-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:76px}
+header .wrap{display:flex;align-items:center;min-height:76px}
 header img{height:20px;width:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
-header a.back{font-size:13.5px;font-weight:500;color:var(--muted);text-decoration:none}
-header a.back:hover{color:var(--fg)}
+.back{display:inline-flex;align-items:center;min-height:44px;margin-bottom:20px;font-size:13.5px;font-weight:500;color:var(--muted);text-decoration:none}
+.back:hover{color:var(--fg)}
 main{padding-block:clamp(48px,6vw,96px)}
 h1{margin:0 0 10px;font-family:"Unbounded","Golos Text",sans-serif;font-weight:300;letter-spacing:-.02em;font-size:clamp(26px,3.4vw,44px);line-height:1.08;overflow-wrap:anywhere;hyphens:auto}
 .lead{margin:0 0 40px;color:var(--muted);font-size:15px}
@@ -139,12 +139,12 @@ footer{border-top:1px solid var(--line);padding-block:36px;color:var(--muted);fo
   <body>
     <header>
       <div class="wrap">
-        <a class="back" href="./">← На главную</a>
         <a href="./" aria-label="СКАЙСИНТ ИНЖИНИРИНГ — на главную"><img src="./brand/sks-logo-for-dark-bg.svg" alt="СКАЙСИНТ ИНЖИНИРИНГ" draggable="false" /></a>
       </div>
     </header>
     <main>
       <div class="wrap">
+    <a class="back" href="./">← На главную</a>
     <h1>Политика конфиденциальности</h1>
     <p class="lead">ООО «СКАЙСИНТ ИНЖИНИРИНГ», ИНН 7811807479, ОГРН 1257800037461, Санкт-Петербург. Редакция от 18 августа 2026 года.</p>
 
