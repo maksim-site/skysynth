@@ -23,11 +23,29 @@ export function useReveal() {
           observer.unobserve(entry.target);
         });
       },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
+      { rootMargin: "240px 0px 240px 0px", threshold: 0 },
     );
 
     nodes.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
+    // Anchor navigation is an explicit request to read a section, not watch
+    // its entrance. Reveal before the browser begins its smooth scroll.
+    const revealForNavigation = (event) => {
+      const anchor = event.target?.closest?.('a[href^="#"]');
+      if (event.type === "click" && (!anchor || !anchor.hash)) return;
+      nodes.forEach((node) => {
+        node.dataset.revealImmediate = "true";
+        node.dataset.reveal = "in";
+      });
+      observer.disconnect();
+    };
+    document.addEventListener("click", revealForNavigation, true);
+    window.addEventListener("hashchange", revealForNavigation);
+    if (window.location.hash && window.location.hash !== "#top") revealForNavigation({ type: "hashchange" });
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("click", revealForNavigation, true);
+      window.removeEventListener("hashchange", revealForNavigation);
+    };
   }, []);
 }
 

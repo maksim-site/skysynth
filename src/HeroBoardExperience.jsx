@@ -10,6 +10,9 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Rotate3D } from "lucide-react";
 import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
+import { HIDDEN_PENDANT_QUERY, NARROW_HERO_QUERY } from "./heroLayout.js";
+import { useHeroStageLayout } from "./useHeroStageLayout.js";
+import { BOARD_RETURN_SECONDS, HERO_LAND_SECONDS, HERO_LIFT_SECONDS } from "./heroMotion.js";
 
 const BoardCanvas = lazy(() => import("./BoardCanvas.jsx"));
 
@@ -22,41 +25,54 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
   const imageRef = useRef(null);
   const canvasRef = useRef(null);
   const controlsRef = useRef(null);
+  const returnFocusRef = useRef(false);
   const [mode, setMode] = useState("rest");
   const [mounted3D, setMounted3D] = useState(false);
   const [modelReady, setModelReady] = useState(false);
-  const [liftComplete, setLiftComplete] = useState(false);
-  const [stageSize, setStageSize] = useState(null);
+  const [inView, setInView] = useState(true);
   const [webGLAvailable] = useState(supportsWebGL);
-  const isMobileAsset = useMediaQuery("(max-width: 860px)");
+  const isMobileAsset = useMediaQuery(NARROW_HERO_QUERY);
+  const isPhone = useMediaQuery(HIDDEN_PENDANT_QUERY);
+  const sceneStyle = useHeroStageLayout(rootRef, isMobileAsset);
   const isCompact = useMediaQuery("(max-width: 620px)");
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const board = boards[0];
 
   useEffect(() => {
+    if (mode === "rest") {
+      if (returnFocusRef.current) {
+        returnFocusRef.current = false;
+        triggerRef.current?.focus({ preventScroll: true });
+      }
+      return undefined;
+    }
+    const closeWithKeyboard = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      returnFocusRef.current = true;
+      setMode(mode === "preparing" ? "rest" : "returning");
+    };
+    window.addEventListener("keydown", closeWithKeyboard);
+    return () => window.removeEventListener("keydown", closeWithKeyboard);
+  }, [mode]);
+
+  useEffect(() => {
     const root = rootRef.current;
     if (!root) return undefined;
-
-    const updateStage = () => {
-      const rect = root.getBoundingClientRect();
-      const sourceWidth = isMobileAsset ? 1084 : 1586;
-      const sourceHeight = isMobileAsset ? 1451 : 992;
-      const scale = Math.max(
-        rect.width / sourceWidth,
-        rect.height / sourceHeight,
-      );
-
-      setStageSize({
-        width: sourceWidth * scale,
-        height: sourceHeight * scale,
-      });
-    };
-
-    updateStage();
-    const observer = new ResizeObserver(updateStage);
+    let intersects = true;
+    const update = () => setInView(intersects && !document.hidden);
+    const observer = new IntersectionObserver(([entry]) => {
+      intersects = entry.isIntersecting;
+      update();
+    });
     observer.observe(root);
-    return () => observer.disconnect();
-  }, [isMobileAsset]);
+    document.addEventListener("visibilitychange", update);
+    update();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
 
   const handleModelReady = useCallback(() => {
     setModelReady(true);
@@ -66,7 +82,18 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
   const pressRef = useRef(null);
 
   function onCanvasPointerDown(event) {
-    pressRef.current = { x: event.clientX, y: event.clientY, at: Date.now() };
+    if (!event.isPrimary) {
+      pressRef.current = null;
+      return;
+    }
+    pressRef.current = { x: event.clientX, y: event.clientY, at: Date.now(), dragged: false };
+  }
+
+  function onCanvasPointerMove(event) {
+    const press = pressRef.current;
+    if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) >= 6) {
+      press.dragged = true;
+    }
   }
 
   function onCanvasPointerUp(event) {
@@ -75,20 +102,33 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
     if (!press || mode !== "interactive") return;
 
     const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
-    if (moved < 6 && Date.now() - press.at < 400) setMode("returning");
+    if (!press.dragged && moved < 6 && Date.now() - press.at < 400) setMode("returning");
   }
 
   const warm3D = useCallback(() => {
-    if (webGLAvailable && !isCompact) {
+    if (webGLAvailable) {
       preloadBoardModel(board.model, dracoPath);
+      setMounted3D(true);
     }
-  }, [board.model, dracoPath, isCompact, webGLAvailable]);
+  }, [board.model, dracoPath, webGLAvailable]);
 
   useEffect(() => {
-    if (mode === "lifting" && liftComplete && modelReady) {
-      setMode("interactive");
+    if (mounted3D || !inView || !webGLAvailable) return;
+    // Prepare the real Canvas as well as the GLB, before the first click.
+    // Hidden at rest and demand-rendered after its two GPU upload frames.
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(warm3D, { timeout: 1200 });
+      return () => window.cancelIdleCallback(id);
     }
-  }, [liftComplete, mode, modelReady]);
+    const id = window.setTimeout(warm3D, 250);
+    return () => window.clearTimeout(id);
+  }, [inView, mounted3D, warm3D, webGLAvailable]);
+
+  useEffect(() => {
+    if (mode === "preparing" && modelReady) {
+      setMode("lifting");
+    }
+  }, [mode, modelReady]);
 
   useGSAP(
     () => {
@@ -108,7 +148,8 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
         if (canvas) {
           gsap.set(canvas, {
             opacity: 0,
-            scale: 1,
+            scale: isPhone ? 1 : 1.05,
+            yPercent: isPhone ? 1 : 2.4,
             filter: "blur(0px)",
           });
         }
@@ -116,65 +157,27 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
         return undefined;
       }
 
-      if (mode === "lifting") {
+      if (mode === "lifting" && canvas) {
         const timeline = gsap.timeline({
-          onComplete: () => setLiftComplete(true),
+          onComplete: () => setMode("interactive"),
         });
         timeline
           .to(zone, {
-            yPercent: isCompact ? -0.8 : -1.2,
-            scale: isCompact ? 1.007 : 1.012,
-            duration: reducedMotion ? 0.01 : 0.32,
+            yPercent: isCompact ? -1.8 : -2.8,
+            scale: isCompact ? 1.014 : 1.024,
+            duration: reducedMotion ? .01 : HERO_LIFT_SECONDS,
             ease: "power2.inOut",
-          })
-          .to(zone, {
-            yPercent: isCompact ? -3.2 : -5.2,
-            scale: isCompact ? 1.026 : 1.055,
-            duration: reducedMotion ? 0.01 : 0.18,
-            ease: "power4.in",
-          })
-          .to(
-            trigger,
-            {
-              filter: reducedMotion ? "blur(0px)" : "blur(2.6px)",
-              duration: reducedMotion ? 0.01 : 0.14,
-              ease: "power3.in",
-            },
-            "-=0.14",
-          );
+          }, 0)
+          // Match the live silhouette to the photographed pose, then change
+          // illumination immediately while the SAME lift is still underway.
+          .set(canvas, { scale: isPhone ? 1 : 1.05, yPercent: isPhone ? 1 : 2.4, filter: "none" }, 0)
+          .to(canvas, { opacity: 1, duration: reducedMotion ? .01 : .18, ease: "sine.inOut" }, 0)
+          .to(trigger, { opacity: 0, filter: "none", duration: reducedMotion ? .01 : .18, ease: "sine.inOut" }, 0);
         return () => timeline.kill();
       }
 
       if (mode === "interactive" && canvas) {
         const timeline = gsap.timeline();
-        timeline
-          .to(trigger, {
-            opacity: 0,
-            duration: reducedMotion ? 0.01 : 0.13,
-            ease: "power3.in",
-          })
-          .fromTo(
-            canvas,
-            { opacity: 0, scale: 1, filter: "blur(3.5px)" },
-            {
-              opacity: 1,
-              scale: 1,
-              filter: "blur(0px)",
-              duration: reducedMotion ? 0.01 : 0.2,
-              ease: "power2.out",
-            },
-            0.06,
-          )
-          .to(
-            zone,
-            {
-              yPercent: isCompact ? -1.8 : -2.8,
-              scale: isCompact ? 1.014 : 1.024,
-              duration: reducedMotion ? 0.01 : 0.52,
-              ease: "expo.out",
-            },
-            0.07,
-          );
         if (controls) {
           timeline.fromTo(
             controls,
@@ -185,17 +188,21 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
               duration: reducedMotion ? 0.01 : 0.28,
               ease: "power2.out",
             },
-            0.22,
+            0,
           );
         }
         return () => timeline.kill();
       }
 
       if (mode === "returning") {
+        // One uninterrupted descent, with the short curved camera return
+        // happening concurrently. Crossfade only once the board faces home.
+        const landingAt = reducedMotion ? .01 : BOARD_RETURN_SECONDS;
+        const landingDuration = reducedMotion ? .01 : HERO_LAND_SECONDS;
         const timeline = gsap.timeline({
           onComplete: () => {
-            setMounted3D(false);
-            setLiftComplete(false);
+            // Keep this prepared Canvas for the next lift; stop rendering it
+            // at rest instead of rebuilding its WebGL context on each click.
             setMode("rest");
           },
         });
@@ -211,33 +218,33 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
             canvas,
             {
               opacity: 0,
-              filter: reducedMotion ? "blur(0px)" : "blur(3px)",
-              duration: reducedMotion ? 0.01 : 0.14,
-              ease: "power3.in",
+              filter: "blur(0px)",
+              duration: landingDuration,
+              ease: "power2.inOut",
             },
-            0,
+            landingAt,
           );
         }
         timeline
           .set(trigger, {
             opacity: 0,
-            filter: reducedMotion ? "blur(0px)" : "blur(2.4px)",
-          })
+            filter: "blur(0px)",
+          }, landingAt)
           .to(trigger, {
             opacity: 1,
             filter: "blur(0px)",
-            duration: reducedMotion ? 0.01 : 0.18,
-            ease: "power2.out",
-          })
+            duration: landingDuration,
+            ease: "power2.inOut",
+          }, landingAt)
           .to(
             zone,
             {
               yPercent: 0,
               scale: 1,
-              duration: reducedMotion ? 0.01 : 0.58,
-              ease: "power3.out",
+              duration: landingAt + landingDuration,
+              ease: "power2.inOut",
             },
-            "-=0.08",
+            0,
           );
         return () => timeline.kill();
       }
@@ -246,74 +253,61 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
     },
     {
       scope: rootRef,
-      dependencies: [isCompact, mode, reducedMotion],
+      dependencies: [isCompact, isPhone, mode, reducedMotion],
       revertOnUpdate: false,
     },
   );
 
   function open3D() {
-    if (isCompact || !webGLAvailable || mode !== "rest") return;
+    if (!webGLAvailable || mode !== "rest") return;
     warm3D();
     setMounted3D(true);
-    setModelReady(false);
-    setLiftComplete(false);
-    setMode("lifting");
+    if (!mounted3D) setModelReady(false);
+    setMode(modelReady ? "lifting" : "preparing");
   }
-
-  const sceneStyle = stageSize
-    ? { width: stageSize.width, height: stageSize.height }
-    : undefined;
 
   return (
     <div
       className="hero-product-experience"
       data-mode={mode}
+      data-model-ready={modelReady}
       data-theme={theme}
       ref={rootRef}
+      onDragStart={(event) => event.preventDefault()}
     >
-      <div className="hero-composite-stage" style={sceneStyle}>
+      <div className="hero-composite-stage" style={isPhone ? undefined : sceneStyle}>
         <picture className="hero-stage-background">
-          <source media="(max-width: 860px)" srcSet={backgrounds.mobile} />
+          <source media={NARROW_HERO_QUERY} srcSet={backgrounds.mobile} />
           <img
             src={backgrounds.desktop}
             alt="Лабораторный стенд с реальной платой полётного контроллера"
             width="1586"
             height="992"
             fetchPriority="high"
+            draggable={false}
           />
         </picture>
 
         <div className="hero-product-zone" ref={zoneRef}>
-          {isCompact ? (
-            <div className="hero-board-trigger hero-board-static" ref={triggerRef}>
-              <img
-                ref={imageRef}
-                src={board.image}
-                alt="Реальная плата полётного контроллера"
-                width="1200"
-                height="1200"
-              />
-            </div>
-          ) : (
-            <button
-              className="hero-board-trigger"
-              ref={triggerRef}
-              type="button"
-              aria-label="Поднять плату и открыть интерактивную 3D-модель"
-              onClick={open3D}
-              onPointerEnter={warm3D}
-              onFocus={warm3D}
-              disabled={mode !== "rest" || !webGLAvailable}
-            >
-              <img
-                ref={imageRef}
-                src={board.image}
-                alt="Реальная плата полётного контроллера"
-                width="1200"
-                height="1200"
-              />
-            </button>
-          )}
+          <button
+            className="hero-board-trigger"
+            ref={triggerRef}
+            type="button"
+            aria-label="Поднять плату и открыть интерактивную 3D-модель"
+            onClick={open3D}
+            onPointerEnter={warm3D}
+            onFocus={warm3D}
+            disabled={mode !== "rest" || !webGLAvailable}
+          >
+            <img
+              ref={imageRef}
+              src={board.image}
+              alt="Реальная плата полётного контроллера"
+              width="1200"
+              height="1200"
+              draggable={false}
+            />
+          </button>
 
           {mounted3D ? (
             <div
@@ -321,7 +315,9 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
               ref={canvasRef}
               aria-hidden="true"
               onPointerDown={onCanvasPointerDown}
+              onPointerMove={onCanvasPointerMove}
               onPointerUp={onCanvasPointerUp}
+              onPointerCancel={() => { pressRef.current = null; }}
               onPointerLeave={() => {
                 pressRef.current = null;
               }}
@@ -332,7 +328,9 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
                   cameraZ={6.4}
                   compact={isCompact}
                   dracoPath={dracoPath}
-                  floating={mode === "interactive"}
+                  floating={mode === "interactive" && inView && !reducedMotion}
+                  transitionMotion="idle"
+                  presentationMotion={mode === "returning" ? "returning" : mode === "interactive" ? "idle" : "locked"}
                   onReady={handleModelReady}
                   orbit="stage"
                   reducedMotion={reducedMotion}
@@ -345,7 +343,7 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
         </div>
       </div>
 
-      {mounted3D ? (
+      {mounted3D && mode !== "rest" ? (
         <div
           className="hero-3d-ui"
           data-active={mode === "interactive"}
@@ -356,13 +354,13 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
             <span>
               {isCompact
                 ? "Проведите: вращение. Касание: вернуть"
-                : "Тяните: вращение. Клик: вернуть на стенд"}
+                : "Тяните: вращение на 360°. Клик: вернуть на стенд"}
             </span>
           </div>
         </div>
       ) : null}
 
-      {mode === "rest" && !isCompact ? (
+      {mode === "rest" ? (
         <p className="hero-3d-note" aria-hidden="true">
           <Rotate3D size={14} strokeWidth={1.7} />
           {webGLAvailable
@@ -371,7 +369,7 @@ export function HeroBoardExperience({ backgrounds, boards, dracoPath, theme }) {
         </p>
       ) : null}
 
-      {mode === "lifting" && !modelReady ? (
+      {mode === "preparing" && !modelReady ? (
         <p className="hero-model-loading" role="status" aria-live="polite">
           <span aria-hidden="true" />
           Подготавливаем 3D

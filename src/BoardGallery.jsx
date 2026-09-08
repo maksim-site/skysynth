@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
+import { selectWarmBoards } from "./boardWarmup.js";
 
 const BoardCanvas = lazy(() => import("./BoardCanvas.jsx"));
 const SPIN_TRANSITION_MS = 1100;
@@ -53,40 +54,23 @@ export function BoardGallery({
   const transitionReady = !show3D || modelReady;
   const drifting = stageVisible && !reducedMotion;
   const loadedModelCount = readyModels.size;
+
+  useEffect(() => {
+    // At the smallest widths the touch-sized filmstrip scrolls horizontally.
+    // Keep the current item visible without scrolling the page or the stage.
+    const selected = rootRef.current?.querySelector('.board-selector-options [aria-current="true"]');
+    const list = selected?.parentElement;
+    if (!selected || !list || list.scrollWidth <= list.clientWidth) return;
+    const itemBox = selected.getBoundingClientRect();
+    const listBox = list.getBoundingClientRect();
+    if (itemBox.left < listBox.left || itemBox.right > listBox.right) {
+      list.scrollLeft += itemBox.left - listBox.left - (list.clientWidth - itemBox.width) / 2;
+    }
+  }, [activeIndex, isCompact]);
+
   const progressivePreloadBoards = useMemo(() => {
-    if (!modelReady) return [];
-    if (!isCompact) return boards;
-
-    // Once the current board is live, warm the remaining models in nearest-
-    // neighbour order. At most two new downloads start together, so mobile
-    // never starves the active model but a quick tap cannot reveal an empty
-    // canvas while the next GLB begins loading.
-    const ordered = [board];
-    const seen = new Set([board.model]);
-    for (let distance = 1; distance < boards.length; distance += 1) {
-      const candidates = [
-        boards[(activeIndex + distance) % boards.length],
-        boards[(activeIndex - distance + boards.length) % boards.length],
-      ];
-      candidates.forEach((candidate) => {
-        if (!seen.has(candidate.model)) {
-          seen.add(candidate.model);
-          ordered.push(candidate);
-        }
-      });
-    }
-
-    const scheduledCount = Math.min(
-      boards.length,
-      Math.max(3, readyModels.size + 2),
-    );
-    const scheduled = ordered.slice(0, scheduledCount);
-    const pendingBoard = pendingMove ? boards[pendingMove.nextIndex] : null;
-    if (pendingBoard && !scheduled.some((item) => item.model === pendingBoard.model)) {
-      scheduled.push(pendingBoard);
-    }
-    return scheduled;
-  }, [activeIndex, board, boards, isCompact, modelReady, pendingMove, readyModels]);
+    return selectWarmBoards(boards, activeIndex, readyModels, pendingMove?.nextIndex, motion === "idle");
+  }, [activeIndex, boards, motion, pendingMove, readyModels]);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -270,6 +254,7 @@ export function BoardGallery({
       data-info-open={infoOpen ? "true" : "false"}
       data-motion={motion}
       data-pending={pendingMove ? "true" : "false"}
+      data-ready-count={loadedModelCount}
       data-soft-size-bridge={softSizeBridge ? "true" : "false"}
       ref={rootRef}
       tabIndex="0"
@@ -296,6 +281,7 @@ export function BoardGallery({
             alt=""
             width="1586"
             height="992"
+            draggable={false}
           />
           {theme === "dark" && turntableVideo ? (
             <video
@@ -306,9 +292,9 @@ export function BoardGallery({
               }
               muted
               playsInline
-              preload={isCompact ? "metadata" : "auto"}
-              onLoadedData={isCompact ? undefined : primeTurntableVideo}
-              onEnded={isCompact ? undefined : finishTurntablePrime}
+              preload="auto"
+              onLoadedData={primeTurntableVideo}
+              onEnded={finishTurntablePrime}
             >
               <source src={turntableVideo} type="video/mp4" />
             </video>
@@ -327,6 +313,7 @@ export function BoardGallery({
               data-active="true"
               width="1400"
               height="1400"
+              draggable={false}
             />
           ) : null}
 
@@ -395,59 +382,72 @@ export function BoardGallery({
           </p>
         ) : null}
 
-        <div className="board-selector-meta" aria-live="polite">
-          <div className="board-selector-heading">
-            <div className="board-selector-info" ref={infoRef}>
-              <div className="board-selector-title-row">
-                <h3 id={`board-title-${activeIndex}`}>{board.title}</h3>
-                <button
-                  type="button"
-                  className="board-selector-info-button"
-                  aria-label={`Описание платы ${board.title}`}
-                  aria-expanded={infoOpen}
-                  aria-controls={`board-info-${activeIndex}`}
-                  onClick={() => setInfoOpen((value) => !value)}
-                >
-                  <span aria-hidden="true">i</span>
-                </button>
-              </div>
-              {infoOpen ? (
-                <div
-                  className="board-selector-info-card"
-                  id={`board-info-${activeIndex}`}
-                  role="dialog"
-                  aria-labelledby={`board-title-${activeIndex}`}
-                >
+        <div className="board-selector-toolbar">
+          <div className="board-selector-meta" aria-live="polite">
+            <div className="board-selector-heading">
+              <div className="board-selector-info" ref={infoRef}>
+                <div className="board-selector-title-row">
+                  <h3 id={`board-title-${activeIndex}`}>{board.title}</h3>
                   <button
                     type="button"
-                    className="board-selector-info-close"
-                    aria-label="Закрыть описание"
-                    onClick={() => setInfoOpen(false)}
+                    className="board-selector-info-button"
+                    aria-label={`Описание платы ${board.title}`}
+                    aria-expanded={infoOpen}
+                    aria-controls={`board-info-${activeIndex}`}
+                    onClick={() => setInfoOpen((value) => !value)}
                   >
-                    <span aria-hidden="true">×</span>
+                    <span aria-hidden="true">i</span>
                   </button>
-                  <p className="eyebrow">Описание платы</p>
-                  <p>{board.text}</p>
                 </div>
-              ) : null}
+                {infoOpen ? (
+                  <div
+                    className="board-selector-info-card"
+                    id={`board-info-${activeIndex}`}
+                    role="dialog"
+                    aria-labelledby={`board-title-${activeIndex}`}
+                  >
+                    <button
+                      type="button"
+                      className="board-selector-info-close"
+                      aria-label="Закрыть описание"
+                      onClick={() => setInfoOpen(false)}
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
+                    <p className="eyebrow">Описание платы</p>
+                    <p>{board.text}</p>
+                  </div>
+                ) : null}
+              </div>
+              <p className="board-selector-count">
+                {String(activeIndex + 1).padStart(2, "0")} / {String(boards.length).padStart(2, "0")}
+              </p>
             </div>
-            <p className="board-selector-count">
-              {String(activeIndex + 1).padStart(2, "0")} / {String(boards.length).padStart(2, "0")}
-            </p>
           </div>
         </div>
-
-        <div className="board-selector-dots" aria-label="Выбор разработки">
+      </div>
+      <div className="board-selector-switcher" role="group" aria-labelledby="board-switcher-label">
+        <p id="board-switcher-label">Выбрать разработку</p>
+        <div className="board-selector-options">
           {boards.map((item, index) => (
             <button
               type="button"
               key={item.title}
               aria-label={item.title}
+              title={item.title}
               aria-current={index === activeIndex ? "true" : undefined}
               disabled={motion !== "idle" || Boolean(pendingMove) || !transitionReady}
               onClick={() => selectBoard(index)}
               onPointerEnter={() => warm3D(item.model)}
             >
+              <img
+                src={item.image}
+                alt=""
+                width="1400"
+                height="1400"
+                loading="lazy"
+                draggable={false}
+              />
               <span>{String(index + 1).padStart(2, "0")}</span>
             </button>
           ))}

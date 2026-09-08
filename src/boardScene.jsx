@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal, useFrame, useThree } from "@react-three/fiber";
 import {
   AdaptiveDpr,
   Center,
@@ -9,6 +9,8 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import * as THREE from "three";
+import { restoreBoardPresentation, setBoardPresentationHome } from "./boardPresentation.js";
+import { BOARD_RETURN_SECONDS, createBoardReturn, sampleBoardReturn } from "./boardReturn.js";
 
 const preparedBoardCache = new Map();
 
@@ -33,6 +35,7 @@ function prepareBoard(board, scene) {
         : [0, 0, 0];
 
   object.position.sub(center);
+  const materialCopies = new Map();
   object.traverse((child) => {
     if (!child.isMesh) return;
 
@@ -40,6 +43,7 @@ function prepareBoard(board, scene) {
       ? child.material
       : [child.material];
     const polished = materials.map((source) => {
+      if (materialCopies.has(source)) return materialCopies.get(source);
       const material = source.clone();
       const name = material.name.toLowerCase();
       const color = material.color;
@@ -53,7 +57,17 @@ function prepareBoard(board, scene) {
         material.color?.set("#d1a356");
         material.metalness = 0.32;
         material.roughness = 0.3;
-      } else if (name.includes("solder") || name.includes("core")) {
+      } else if (name.includes("solder")) {
+        material.color?.set("#222829");
+        material.metalness = 0.04;
+        material.roughness = 0.42;
+        // Client reference: the solder mask is the same opaque black on both
+        // faces. Several source GLBs store solder_b as translucent green.
+        material.opacity = 1;
+        material.transparent = false;
+        material.alphaTest = 0;
+        material.depthWrite = true;
+      } else if (name.includes("core")) {
         material.color?.set("#222829");
         material.metalness = 0.04;
         material.roughness = 0.42;
@@ -81,6 +95,7 @@ function prepareBoard(board, scene) {
       material.side = THREE.DoubleSide;
       material.envMapIntensity = 0.82;
       material.needsUpdate = true;
+      materialCopies.set(source, material);
       return material;
     });
 
@@ -99,7 +114,13 @@ function prepareBoard(board, scene) {
   return prepared;
 }
 
-function PreparedBoard({ baseRotation = 0.29, board, dracoPath, onReady }) {
+function PreparedBoard({ active = true, baseRotation = 0.29, board, dracoPath, onReady }) {
+  const { gl, camera, scene: renderScene, invalidate } = useThree();
+  const [compiled, setCompiled] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+  const warmFrames = useRef(0);
+  const hostRef = useRef(null);
+  const [resident] = useState(() => new THREE.Group());
   const { scene } = useGLTF(board.model, dracoPath);
   const prepared = useMemo(
     () => prepareBoard(board, scene),
@@ -112,54 +133,58 @@ function PreparedBoard({ baseRotation = 0.29, board, dracoPath, onReady }) {
     // scale or front-facing rotation from the preloader.
     clone.scale.set(1, 1, 1);
     clone.rotation.set(0, 0, 0);
+    // These client CAD models have no skeletal/local animation. Their local
+    // matrices are static; only the outer presentation groups ever move.
+    clone.traverse((node) => {
+      node.updateMatrix();
+      node.matrixAutoUpdate = false;
+    });
     return clone;
   }, [prepared]);
 
-  useEffect(() => {
-    onReady?.(board.model);
-  }, [board.model, onReady, prepared]);
-
-  return (
-    <Center>
-      <group rotation={[0, 0, baseRotation]}>
-        <group scale={prepared.scale} rotation={prepared.rotation}>
-          <primitive object={instance} />
-        </group>
-      </group>
-    </Center>
-  );
-}
-
-export function BoardModelPreloader({ board, dracoPath, onReady }) {
-  const groupRef = useRef(null);
-  const warmFrameRef = useRef(0);
-  const invalidate = useThree((state) => state.invalidate);
-  const { scene } = useGLTF(board.model, dracoPath);
-  const prepared = useMemo(() => prepareBoard(board, scene), [board, scene]);
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host || !compiled || (!active && uploaded)) return;
+    // Keep the exact mounted/compiled model in its own portal. Once warm,
+    // detach inactive trees so Three does not walk thousands of hidden CAD
+    // nodes on every frame. Reattaching never rebuilds geometry or Center.
+    host.add(resident);
+    invalidate();
+    return () => { host.remove(resident); };
+  }, [active, compiled, uploaded, resident, invalidate]);
 
   useEffect(() => {
-    onReady?.(board.model);
-  }, [board.model, onReady, prepared]);
+    let cancelled = false;
+    // Compile against the actual lights/environment of this Canvas. Network
+    // completion alone is not readiness, and a different Canvas cannot warm it.
+    const frame = requestAnimationFrame(() => {
+      gl.compileAsync(instance, camera, renderScene).then(() => {
+        if (!cancelled) { setCompiled(true); invalidate(); }
+      });
+    });
+    return () => { cancelled = true; cancelAnimationFrame(frame); };
+  }, [camera, gl, instance, invalidate, renderScene]);
 
   useFrame(() => {
-    if (!groupRef.current?.visible) return;
-    warmFrameRef.current += 1;
-    if (warmFrameRef.current >= 2) {
-      // Keep the uploaded geometries and compiled materials mounted, but stop
-      // submitting seven microscopic warm-up copies on every live frame.
-      groupRef.current.visible = false;
-      return;
-    }
-    invalidate();
+    if (!compiled || uploaded) return;
+    warmFrames.current += 1;
+    // useFrame runs BEFORE rendering. The third callback means that two
+    // actual renders have uploaded the geometry and the shadow materials.
+    if (warmFrames.current >= 3) {
+      setUploaded(true);
+      onReady?.(board.model);
+    } else invalidate();
   });
 
-  // Loading a GLB only parses it on the CPU. This almost-zero-size instance
-  // also uploads its geometry and compiles its materials before selection.
   return (
-    <group ref={groupRef} scale={0.00001} position={[0, 0, 0]}>
-      <group rotation={prepared.rotation} scale={prepared.scale}>
-        <primitive object={prepared.object} />
-      </group>
+    <group ref={hostRef} scale={active ? 1 : .00001} dispose={null}>
+      {createPortal(<Center dispose={null}>
+        <group rotation={[0, 0, baseRotation]}>
+          <group scale={prepared.scale} rotation={prepared.rotation}>
+            <primitive object={instance} />
+          </group>
+        </group>
+      </Center>, resident)}
     </group>
   );
 }
@@ -396,12 +421,13 @@ function TransitionSpinMotion({
 }
 
 const orbitPresets = {
-  // The hero board stays inside the photographed stage, so its travel is tight.
+  // The hero keeps its lighting/scale but allows the same full inspection as
+  // the gallery. Small pole margins avoid OrbitControls' vertical singularity.
   stage: {
-    minPolarAngle: Math.PI / 2 - 0.18,
-    maxPolarAngle: Math.PI / 2 + 0.18,
-    minAzimuthAngle: -0.34,
-    maxAzimuthAngle: 0.34,
+    minPolarAngle: 0.05,
+    maxPolarAngle: Math.PI - 0.05,
+    minAzimuthAngle: -Infinity,
+    maxAzimuthAngle: Infinity,
     minDistance: 5.65,
     maxDistance: 7.25,
   },
@@ -426,13 +452,65 @@ const orbitPresets = {
   },
 };
 
+function ReturnToFixture({ controlsRef, cameraZ, motion, reducedMotion, onRest }) {
+  const pathRef = useRef(null);
+  const elapsed = useRef(0);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useLayoutEffect(() => {
+    const controls = controlsRef.current;
+    if (motion !== "returning" || !controls) return;
+    const position = controls.object.position.clone();
+    const target = controls.target.clone();
+    const damping = controls.enableDamping;
+    const rotating = controls.autoRotate;
+    controls.enableDamping = false;
+    controls.autoRotate = false;
+    // Clear latent pointer inertia, but restore the exact visible starting
+    // pose before the next paint. A plain controls.reset() would snap here.
+    controls.update();
+    controls.object.position.copy(position);
+    controls.target.copy(target);
+    controls.update();
+    pathRef.current = createBoardReturn(position, target, cameraZ);
+    elapsed.current = 0;
+    invalidate();
+    return () => {
+      pathRef.current = null;
+      controls.enableDamping = damping;
+      controls.autoRotate = rotating;
+    };
+  }, [cameraZ, controlsRef, invalidate, motion]);
+
+  useFrame((_, delta) => {
+    const path = pathRef.current;
+    const controls = controlsRef.current;
+    if (!path || !controls) return;
+    elapsed.current += delta;
+    const progress = reducedMotion ? 1 : Math.min(1, elapsed.current / BOARD_RETURN_SECONDS);
+    sampleBoardReturn(path, progress, controls.object.position, controls.target);
+    controls.update();
+    if (progress === 1) {
+      pathRef.current = null;
+      setBoardPresentationHome(controls, cameraZ);
+      onRest?.();
+    }
+  });
+  return null;
+}
+
 export function BoardScene({
   autoRotate,
   board,
+  cameraZ = 6.4,
   compact,
   dracoPath,
   floating,
   onReady,
+  onPreloadReady,
+  preloadBoards,
+  presentationMotion = "idle",
+  onPresentationRest,
   orbit = "stage",
   reducedMotion,
   theme,
@@ -447,17 +525,19 @@ export function BoardScene({
   useLayoutEffect(() => {
     const modelChanged = previousModelRef.current !== board.model;
     previousModelRef.current = board.model;
+    setBoardPresentationHome(controlsRef.current, cameraZ);
 
     // Preserve the visitor's current pose during departure. Canonicalise only
     // at the GLB hand-off, while the board is edge-on and hidden by peak blur;
     // the incoming model then finishes the turn in the straight-on pose.
     if (modelChanged) {
-      controlsRef.current?.reset();
+      restoreBoardPresentation(controlsRef.current, cameraZ);
     }
-  }, [board.model]);
+  }, [board.model, cameraZ]);
   // The selector sits inside a photographed lab. Keep its render close to the
   // subdued practical light in that image, so it does not read as a pasted cutout.
   const boost = orbit === "free" ? 1.34 : orbit === "selector" ? 1.5 : 1;
+  const galleryInspection = orbit === "free";
 
   return (
     <>
@@ -486,6 +566,16 @@ export function BoardScene({
         intensity={(isDark ? 0.92 : 0.56) * boost}
         position={[3.4, -3.2, 4.2]}
       />
+      {galleryInspection ? (
+        // Rear fill has no shadow map: components remain readable on the back
+        // without adding another expensive shadow pass or changing the hero.
+        <directionalLight
+          name="gallery-rear-fill"
+          color={isDark ? "#fff1dc" : "#fffaf2"}
+          intensity={(isDark ? 1.35 : 1.15) * boost}
+          position={[2.8, 3.6, -6.2]}
+        />
+      ) : null}
 
       <Environment resolution={compact ? 64 : 128}>
         <Lightformer
@@ -503,6 +593,16 @@ export function BoardScene({
           rotation={[0, -0.65, 0]}
           scale={[2.5, 2.5, 1]}
         />
+        {galleryInspection ? (
+          <Lightformer
+            color="#fff2df"
+            form="rect"
+            intensity={0.85}
+            position={[-2.8, 2.4, -4.8]}
+            rotation={[0, Math.PI, 0]}
+            scale={[4.5, 3.5, 1]}
+          />
+        ) : null}
       </Environment>
 
       <TransitionSpinMotion
@@ -517,28 +617,28 @@ export function BoardScene({
           transitionDirection={transitionDirection}
           transitionMotion={transitionMotion}
         >
-          <Suspense fallback={null}>
+          {(preloadBoards || [board]).map((item) => <Suspense key={item.model} fallback={null}>
             <PreparedBoard
-              key={board.model}
+              active={item.model === board.model}
               baseRotation={
-                Number.isFinite(board.baseRotation)
-                  ? board.baseRotation
+                Number.isFinite(item.baseRotation)
+                  ? item.baseRotation
                   : orbit === "stage"
                     ? 0.29
                     : 0
               }
-              board={board}
+              board={item}
               dracoPath={dracoPath}
-              onReady={onReady}
+              onReady={onPreloadReady || onReady}
             />
-          </Suspense>
+          </Suspense>)}
         </IdleBoardMotion>
       </TransitionSpinMotion>
 
       <OrbitControls
         ref={controlsRef}
         makeDefault
-        enabled={transitionMotion === "idle"}
+        enabled={transitionMotion === "idle" && presentationMotion === "idle"}
         autoRotate={orbit === "stage" ? Boolean(autoRotate) : false}
         autoRotateSpeed={0.55}
         enablePan={false}
@@ -549,6 +649,14 @@ export function BoardScene({
         rotateSpeed={compact ? 0.78 : 0.48}
         target={[0, 0, 0]}
         {...limits}
+      />
+
+      <ReturnToFixture
+        controlsRef={controlsRef}
+        cameraZ={cameraZ}
+        motion={presentationMotion}
+        reducedMotion={reducedMotion}
+        onRest={onPresentationRest}
       />
 
       <AdaptiveDpr />

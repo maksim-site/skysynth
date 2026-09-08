@@ -1,0 +1,551 @@
+/* Responsive rules are kept in one layer. The hero has one continuous
+   desktop composition and one compact reading-first layout, never a chain
+   of width AND aspect-ratio switches. */
+.service-detail-disclosure > summary { display: none; }
+.service-detail-disclosure { min-width: 0; }
+
+/* Same photograph and coordinate frame from laptop to intermediate window. */
+#top.hero {
+  min-height: max(680px, 100svh);
+  height: auto;
+  display: grid;
+  align-items: end;
+  padding: 0;
+}
+#top .hero-visual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+#top .hero-copy {
+  position: relative;
+  width: min(100%, var(--max));
+  margin-inline: auto;
+  padding: 0 var(--pad) clamp(48px, 6vw, 96px);
+}
+#top .hero-copy > * { max-width: min(47%, 620px); }
+#top h1 { font-size: clamp(26px, 3.2vw, 52px); line-height: 1.05; }
+#top .hero-description { margin-top: 30px; font-size: 1rem; line-height: 1.66; }
+#top .hero-actions { margin-top: 36px; }
+#top .hero-composite-stage {
+  min-width: 0;
+  min-height: 0;
+  top: 0;
+  left: calc(50% + var(--hero-stage-nudge, 0px));
+  transform: translateX(-50%);
+}
+#top .hero-product-zone { top: 13.6%; left: 47.8%; width: 42.7%; height: 76.4%; opacity: 1; }
+#top .hero-board-trigger { width: 90%; }
+#top .hero-product-experience[data-mode="interactive"] .hero-board-canvas canvas {
+  /* OrbitControls can reset its inline value when enabled changes. Only the
+     active board owns touch gestures; the mouse wheel still scrolls the page. */
+  touch-action: none !important;
+}
+#top .hero-product-experience:not([data-mode="interactive"]) .hero-board-canvas canvas {
+  touch-action: pan-y !important;
+}
+
+/* Dark-theme feedback: keep the mask crisp, with halfway contrast between
+   the original grey image and the overly strong first correction. */
+:root[data-theme="dark"] #top .hero-board-trigger img,
+:root[data-theme="dark"] #top .hero-mobile-board {
+  filter: brightness(.78) contrast(1.35) saturate(.96)
+    drop-shadow(0 3px 2px rgb(0 0 0 / .5))
+    drop-shadow(0 12px 20px rgb(0 0 0 / .36));
+}
+
+/* The room reaches the ceiling. Only its lower edge dissolves; the
+   independent PCB remains outside the photograph's mask. */
+@media (min-width: 961px) {
+  #top .hero-stage-background {
+    mask-image: linear-gradient(180deg, #000, #000 86%, transparent);
+  }
+}
+
+/* Compact, portrait fixture. The heading belongs to the first screen.
+   Only phones omit the pendant; wider stacked scenes have room for it. */
+@media (max-width: 960px) {
+  #top.hero {
+    --hero-scene-height: clamp(268px, 44svh, 380px);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    min-height: 100svh;
+    align-content: start;
+    align-items: start;
+    gap: 0;
+    padding: calc(var(--cap-h) + var(--cap-top) + 6px) 0 0;
+    isolation: isolate;
+    background: var(--bg);
+  }
+  #top .hero-visual {
+    position: relative;
+    inset: auto;
+    grid-column: 1; grid-row: 1;
+    display: block;
+    height: var(--hero-scene-height);
+    overflow: clip;
+  }
+  #top .hero-copy {
+    grid-column: 1; grid-row: 2;
+    width: min(100%, 700px);
+    padding: 0 var(--pad) 32px;
+    min-height: calc(100svh - var(--hero-scene-height) - var(--cap-h) - var(--cap-top) - 6px);
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    z-index: 6;
+  }
+  #top .hero-copy > * { max-width: 100%; }
+  #top h1 { font-size: clamp(26px, calc(12px + 2.2vw), 28px); line-height: 1.08; }
+  #top .hero-description {
+    max-width: 38ch;
+    margin-top: clamp(20px, 3.5svh, 30px);
+    font-size: clamp(1rem, calc(.75rem + 1vw), 1.125rem);
+    line-height: 1.6;
+  }
+  #top .hero-actions { margin-top: 0; padding-top: 24px; align-items: flex-start; }
+  #top .hero-actions .button { min-height: 48px; width: auto; padding-inline: 24px; font-size: 1rem; }
+  :root[data-theme] #top .hero-visual::after { background: none; }
+  #top .hero-composite-stage { transform: none; }
+  #top .hero-product-zone { top: 17.7%; left: 12.4%; width: 75.2%; height: 67.1%; }
+  #top .hero-board-trigger { width: 91%; }
+  #top .hero-mobile-scene { position: absolute; inset: 0; height: 100%; mask-image: none; }
+  #top .hero-mobile-composite { position: absolute; inset: auto; margin: 0; transform: none; }
+  :root[data-theme] #top .hero-mobile-stage { inset: 0; width: 100%; height: 100%; transform: none; }
+  :root[data-theme] #top .hero-stage-background,
+  :root[data-theme] #top .hero-mobile-stage img {
+    mask-image: linear-gradient(90deg, transparent var(--hero-photo-left),
+        #000 max(12%, calc(var(--hero-photo-left) + 16px)),
+        #000 min(88%, calc(var(--hero-photo-right) - 16px)), transparent var(--hero-photo-right)),
+      linear-gradient(180deg, transparent var(--hero-photo-top), #000 calc(var(--hero-photo-top) + 12px),
+        #000 calc(var(--hero-photo-bottom) - 24px), transparent var(--hero-photo-bottom));
+    mask-composite: intersect;
+  }
+  :root[data-theme="dark"] #top .hero-stage-background img,
+  :root[data-theme="dark"] #top .hero-mobile-stage img { filter: brightness(.8) contrast(1.08) saturate(.78); }
+  :root[data-theme="light"] #top .hero-stage-background img,
+  :root[data-theme="light"] #top .hero-mobile-stage img { filter: brightness(.9) contrast(1.03) saturate(.7); }
+  #top .hero-mobile-stage img, #top .hero-media img { object-fit: contain; }
+  #top .hero-3d-note, #top .hero-3d-ui {
+    display: flex;
+    top: auto; bottom: 0; left: var(--pad); right: var(--pad);
+    width: auto; justify-content: center; text-align: center;
+  }
+  #top .hero-3d-gesture-hint { font-size: .75rem; white-space: normal; line-height: 1.4; }
+  #top .hero-3d-ui { display: none; }
+  #top .hero-model-loading { top: auto; bottom: 16px; right: var(--pad); }
+}
+
+/* Centre the reading column, while its text keeps a natural left edge. */
+@media (min-width: 540px) and (max-width: 960px) {
+  #top.hero {
+    --hero-scene-height: max(clamp(268px, 44svh, 380px), calc(48.2vw + 37px));
+  }
+  #top .hero-visual,
+  #top .hero-product-experience,
+  #top .hero-pendant { overflow: visible; }
+  #top .hero-copy {
+    width: min(calc(100% - 48px), clamp(560px, calc(100vw - 160px), 700px));
+    align-items: stretch;
+    text-align: left;
+    padding: 12px 0 32px;
+  }
+  #top h1 { text-wrap: initial; }
+  #top .hero-description { max-width: 100%; }
+  #top .hero-actions { align-items: flex-start; justify-content: flex-start; }
+  #top .hero-product-zone {
+    top: 13.6%; left: 47.8%; width: 42.7%; height: 76.4%;
+    pointer-events: auto;
+  }
+  #top .hero-board-trigger { width: 90%; }
+  :root[data-theme] #top .hero-stage-background {
+    /* Preserve the source's side continuation. Dissolve only the empty
+       ceiling/floor; the complete fixture and independent PCB stay sharp. */
+    mask-image: linear-gradient(180deg, transparent, #000 32px,
+      #000 calc(var(--hero-photo-bottom) - 24px), transparent var(--hero-photo-bottom));
+  }
+  #top .hero-pendant-rig::before {
+    content: "";
+    position: absolute;
+    left: 44.6797%;
+    bottom: calc(100% - 2px);
+    width: 1px;
+    height: calc(var(--cap-h) + var(--cap-top) + 24px);
+    background: #41433f;
+  }
+  #top .hero-pendant-illumination {
+    position: absolute;
+    inset: 0;
+    mask-image: linear-gradient(180deg, #000,
+      #000 calc(var(--hero-scene-height) - 120px),
+      rgb(0 0 0 / .6) calc(var(--hero-scene-height) - 64px),
+      transparent var(--hero-scene-height));
+  }
+  #top .hero-3d-note { font-size: 10px; letter-spacing: .075em; line-height: 1.4; }
+  #top .hero-model-loading { display: flex; }
+}
+
+/* A wide stacked scene leaves less height for copy. Keep its full photograph
+   and readable type, and recover space from wrapping and vertical gaps. */
+@media (min-width: 721px) and (max-width: 960px) and (max-height: 900px) {
+  #top .hero-copy {
+    /* Above the compact copy's 290px budget, share spare height between
+       the reading gaps instead of sending the CTA to the viewport bottom. */
+    --hero-copy-air: clamp(0px,
+      calc((100svh - var(--hero-scene-height) - var(--cap-h) - var(--cap-top) - 6px - 290px) / 4),
+      16px);
+    padding: calc(8px + var(--hero-copy-air)) 0 20px;
+  }
+  #top .hero-description { margin-top: calc(12px + var(--hero-copy-air)); line-height: 1.5; }
+  #top .hero-actions { padding-top: calc(12px + var(--hero-copy-air)); }
+}
+
+@media (max-width: 539px) {
+  #top .hero-pendant { display: none; }
+
+  /* Restore the published phone composition: substantial PCB, compact copy,
+     and a room that recedes behind the text rather than a separate photo card.
+     Both photographic layers share this single, continuously scaled frame. */
+  #top.hero {
+    --phone-scene-height: clamp(310px, 47svh, 402px);
+    display: flex;
+    flex-direction: column;
+    min-height: max(700px, 100svh);
+    padding: 0;
+  }
+  #top .hero-visual { position: absolute; inset: 0; height: 100%; }
+  #top .hero-copy {
+    min-height: 0;
+    margin: auto auto 0;
+    padding: calc(var(--phone-scene-height) + 22px) var(--pad) 42px;
+  }
+  #top h1 { font-size: clamp(25px, 7.45vw, 31px); line-height: 1.04; }
+  #top .hero-description { max-width: 100%; margin-top: 22px; font-size: 14.5px; line-height: 1.58; }
+  #top .hero-actions { margin-top: 20px; padding-top: 0; }
+  #top .hero-actions .button { min-height: 44px; padding-inline: 21px; font-size: 14px; }
+  #top .hero-mobile-composite, #top .hero-composite-stage {
+    top: -8px; left: 50%;
+    width: min(106vw, 417px, calc(var(--phone-scene-height) * 1.04));
+    height: auto;
+    aspect-ratio: 1085 / 1450;
+    transform: translateX(-50%);
+  }
+  :root[data-theme] #top .hero-mobile-stage img,
+  :root[data-theme] #top .hero-stage-background img {
+    mask-image: linear-gradient(180deg, #000, #000 62%, rgb(0 0 0 / .86) 72%, rgb(0 0 0 / .5) 82%, rgb(0 0 0 / .16) 91%, transparent);
+  }
+  :root[data-theme] #top .hero-mobile-stage,
+  :root[data-theme] #top .hero-stage-background {
+    /* Wide phones expose the photo's side margins. Fade only empty room;
+       the fixture is inside 12–88%, and the PCB is a separate sibling. */
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+  :root[data-theme="dark"] #top .hero-mobile-stage img,
+  :root[data-theme="dark"] #top .hero-stage-background img { filter: brightness(.63) contrast(1.12) saturate(.72); }
+  :root[data-theme="light"] #top .hero-mobile-stage img,
+  :root[data-theme="light"] #top .hero-stage-background img { filter: brightness(.82) contrast(1.06) saturate(.62); }
+  :root[data-theme] #top .hero-mobile-board {
+    top: calc(21.33% - 12px); left: 50%; width: 79.2%;
+    transform: translateX(-50%) rotate(-16.5deg);
+    mask-image: none;
+  }
+  /* Keep the previous render size; lift only the PCB 12px on its fixture.
+     Its photograph and live canvas move together, independently of the room. */
+  #top .hero-product-zone {
+    top: calc(11.746% - 12px); left: 6.4835%; width: 87.033%; height: 77.658%;
+    pointer-events: auto;
+  }
+  :root[data-theme="light"] #top .hero-board-trigger img {
+    filter: brightness(.8) contrast(1.56) saturate(1.02)
+      drop-shadow(0 4px 3px rgb(24 28 26 / .2))
+      drop-shadow(0 18px 24px rgb(34 39 36 / .25));
+  }
+  #top .hero-3d-note, #top .hero-3d-ui, #top .hero-model-loading {
+    display: flex;
+    top: calc(var(--phone-scene-height) + 2px); bottom: auto;
+    left: var(--pad); right: var(--pad); margin: 0;
+    justify-content: center;
+    font-size: 9px; letter-spacing: .035em; line-height: 1.4;
+  }
+  #top .hero-3d-gesture-hint {
+    position: static; width: auto; height: auto; min-height: 14px;
+    padding: 0; border: 0; background: none; box-shadow: none;
+    font-size: 10px;
+  }
+  #top .hero-3d-ui { display: none; }
+}
+
+/* A dropdown does not need an empty full-width capsule. Its panel retains
+   its own readable width and the existing touch-sized controls. */
+@media (max-width: 32.499em) {
+  .site-header .header-inner {
+    width: min(262px, calc(100% - 2 * var(--pad)));
+    max-width: calc(100% - 2 * var(--pad));
+    padding: 0 5px 0 15px;
+    gap: 8px;
+  }
+}
+
+/* Only the empty room above the four boards dissolves. The measured end
+   stop stays above the first component, including cover/contain crops. */
+@media (min-width: 621px) {
+  .contact-band .contact-band-photo { object-position: center 70%; }
+}
+:root[data-theme] .contact-band::before {
+  top: 0;
+  height: var(--panorama-top-fade, 0px);
+  filter: none;
+  background: linear-gradient(180deg,
+    var(--bg) 0%, var(--bg) 6%,
+    color-mix(in srgb, var(--bg) 88%, transparent) 28%,
+    color-mix(in srgb, var(--bg) 48%, transparent) 58%,
+    color-mix(in srgb, var(--bg) 12%, transparent) 82%, transparent 100%);
+}
+
+/* One continuous three-column geometry: the photo's fixture occupies ~28%
+   of the scene, so a narrower centre track would push copy onto the PCB. */
+@media (min-width: 740px) {
+  #services .service-offerings {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1fr);
+    column-gap: clamp(24px, 2.5vw, 40px);
+    min-height: 0;
+    padding-block: 28px;
+    align-items: center;
+  }
+  #services .service-offering { grid-column: 1; grid-row: 1; }
+  #services .service-offering#reverse { grid-column: 3; grid-row: 1; }
+  #services .service-offering-title { font-size: clamp(21px, calc(3px + 1.7vw), 30px); }
+  #services .service-offering-icon { width: 44px; height: 44px; margin-bottom: 16px; }
+  #services .service-scene-art { position: absolute; z-index: -1; top: 50%; bottom: auto; left: calc(0px - var(--pad)); right: auto; width: calc(100% + 2 * var(--pad)); height: auto; aspect-ratio: 1672 / 941; margin: 0; transform: translateY(-50%); }
+  #services .service-scene-art img { width: 100%; height: auto; object-fit: contain; }
+  #services .service-scene-art::after {
+    background: linear-gradient(90deg, var(--bg), var(--bg) 28%, transparent 41%, transparent 59%, var(--bg) 72%, var(--bg));
+  }
+}
+
+/* Peer services begin on the same lines. Shared rows also align their
+   descriptions and detail rules despite differently wrapped headings. */
+@media (min-width: 740px) {
+  #services .service-offerings {
+    grid-template-rows: repeat(4, auto);
+    row-gap: 0;
+    align-content: center;
+    align-items: start;
+  }
+  #services .service-offering,
+  #services .service-offering#reverse {
+    display: grid;
+    grid-row: 1 / span 4;
+    grid-template-rows: subgrid;
+  }
+}
+
+/* A short shared visual bridge, not a rectangular photograph between long
+   articles. Full approved detail is accessible in native disclosure controls. */
+@media (max-width: 739px) {
+  #services .service-offerings {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    /* The pictured fixture spans 448/1672 of the viewport width. Reserve
+       that full height plus clearance even as either disclosure expands. */
+    grid-template-rows: auto clamp(150px, 36vw, 266px) auto;
+    gap: 0;
+    min-height: 0;
+    padding-block: 4px 0;
+  }
+  #services .service-offering { grid-column: 1; grid-row: 1; }
+  #services .service-offering#reverse { grid-column: 1; grid-row: 3; }
+  #services .service-offering-title { max-width: 28ch; font-size: clamp(22px, 5.7vw, 29px); line-height: 1.24; }
+  #services .service-offering-icon { width: 44px; height: 44px; margin-bottom: 16px; }
+  #services .service-offering-description { margin-top: 14px; font-size: 1rem; line-height: 1.55; }
+  #services .service-scene-art {
+    position: relative; z-index: -1;
+    grid-column: 1; grid-row: 2;
+    width: calc(100% + 2 * var(--pad));
+    height: auto;
+    aspect-ratio: 1672 / 941;
+    justify-self: center;
+    align-self: center;
+    inset: auto;
+    margin: 0;
+    transform: none;
+    pointer-events: none;
+  }
+  #services .service-scene-art img {
+    height: auto; object-fit: contain;
+    mask-image: linear-gradient(180deg, transparent, #000 24%, #000 78%, transparent);
+  }
+  #services .service-scene-art::after {
+    background: linear-gradient(90deg, var(--bg), transparent 28%, transparent 72%, var(--bg));
+  }
+  #services .service-detail-disclosure { margin-top: 18px; border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+  #services .service-detail-disclosure > summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    min-height: 52px; padding: 12px 0; list-style: none;
+    font-size: .9375rem; font-weight: 500; color: var(--fg); cursor: pointer;
+  }
+  #services summary::-webkit-details-marker { display: none; }
+  #services summary svg { flex-shrink: 0; width: 20px; height: 20px; transition: transform 180ms ease; }
+  #services details[open] > summary svg { transform: rotate(45deg); }
+  #services summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+  #services .service-offering-details { margin: 0; padding: 8px 0 20px; border: 0; gap: 18px; }
+  #services .service-directions-title { margin-top: 40px; }
+}
+
+/* Lower sections: content-flow headings and predictable stage geometry. */
+@media (max-width: 1180px) {
+  .section-shell { padding-block: 56px; }
+  .section-heading-with-copy { grid-template-columns: 1fr; gap: 18px; }
+  .section-heading-row h2 { font-size: clamp(32px, 5.2vw, 54px); line-height: 1.13; }
+  .section-intro { font-size: 1rem; line-height: 1.6; }
+  .service-row { grid-template-columns: 40px minmax(0, 1fr); align-items: start; gap: 6px 16px; padding-block: 22px; }
+  .service-head, .service-body { grid-column: 2; padding: 0; }
+  .service-body p { font-size: 1rem; line-height: 1.6; }
+  #developments { height: auto; min-height: 0; }
+  #developments .developments-head { position: relative; inset: auto; transform: none; width: 100%; padding: 52px var(--pad) 20px; }
+  #developments .section-heading-with-copy { grid-template-columns: 1fr; gap: 16px; margin: 0; }
+  #developments .section-intro { max-width: 64ch; font-size: 1rem; }
+  #developments .board-selector { margin-top: 0; }
+  #developments .board-selector-stage { height: 680px; min-height: 0; }
+  #developments .board-selector-toolbar { inset: 10px var(--pad) auto; display: block; }
+  #developments .board-selector-toolbar .board-selector-meta { position: relative; inset: auto; width: auto; padding: 0; }
+  #developments .board-selector-heading { padding: 0; }
+  #developments .board-selector-heading h3 { font-size: clamp(20px, 2.7vw, 28px); line-height: 1.25; }
+  #developments .board-selector-title-row { gap: 10px; }
+  #developments .board-selector-info-button, #developments .board-selector-info-close { width: 44px; height: 44px; }
+  #developments .board-selector-info-card { max-height: min(420px, 65svh); overflow-y: auto; }
+  #developments .board-selector-info-card > p:last-child { font-size: 1rem; line-height: 1.55; }
+  #developments .selector-board-canvas { top: 20%; bottom: 20%; left: 10%; right: 10%; }
+  #developments .board-selector-arrow { top: 50%; width: 56px; height: 64px; }
+  #developments .board-selector-switcher { width: min(480px, calc(100% - 2 * var(--pad))); margin-top: -58px; padding-bottom: 32px; }
+  #developments .board-selector-options { grid-template-columns: repeat(7, minmax(44px, 1fr)); overflow-x: auto; padding: 4px; scroll-padding: 4px; scrollbar-width: thin; }
+  #developments .board-selector-options button { min-height: 72px; font-size: .8125rem; }
+  #developments .board-selector-hint { display: block; top: auto; bottom: 90px; left: var(--pad); right: var(--pad); text-align: center; font-size: .75rem; }
+  .deliverables-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+  .deliverable { min-height: 0; padding-block: 24px; }
+  .deliverable h3 { font-size: 1rem; line-height: 1.4; }
+  .deliverable > p:last-child { font-size: 1rem; line-height: 1.55; }
+  #contact .contact-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .contact-copy { max-width: 740px; }
+  .contact-copy h2 { font-size: clamp(30px, 4.8vw, 48px); line-height: 1.15; }
+  .legal-summary { margin-top: 24px; }
+  .project-form { width: 100%; max-width: 800px; }
+  .project-form label > span { font-size: .875rem; }
+  .project-form input, .project-form textarea { min-width: 0; font-size: 1rem; }
+  .project-form .checkbox-label { min-height: 44px; }
+}
+
+@media (max-width: 620px) {
+  .header-inner { width: calc(100% - 2 * var(--pad)); max-width: 440px; }
+  .theme-toggle, .menu-button { min-width: 44px; min-height: 44px; }
+  .section-shell { padding-block: 44px; }
+  #services > .section-shell { padding-top: 36px; }
+  .section-heading-row h2 { font-size: clamp(29px, 8.3vw, 42px); }
+  /* Keep the whole phone stand and the exact models; use the same actual-board
+     thumbnails as desktop with a scrollable row only on the narrowest phones. */
+  #developments .developments-head { padding: 52px var(--pad) 0; min-height: 222px; }
+  #developments .section-heading-with-copy { gap: 14px; }
+  #developments .section-intro { max-width: 33ch; font-size: 13px; line-height: 1.5; }
+  #developments .board-selector-stage { height: 578px; }
+  #developments .board-selector-media { top: 266px; width: 206%; }
+  :root[data-theme] #developments .board-selector-media {
+    /* Fade at the photograph's own lower edge or its visible stage crop.
+       The separate live PCB and thumbnail controls stay outside the mask. */
+    --floor-bottom: min(100%, calc(50% + 312px));
+    mask-image: linear-gradient(180deg, #000 0%, #000 calc(var(--floor-bottom) - 80px),
+      rgb(0 0 0 / .8) calc(var(--floor-bottom) - 54px),
+      rgb(0 0 0 / .3) calc(var(--floor-bottom) - 24px), transparent var(--floor-bottom));
+  }
+  :root[data-theme="light"] #developments .board-selector-media {
+    mask-image: linear-gradient(180deg, transparent, rgb(0 0 0 / .16) 5%,
+      rgb(0 0 0 / .6) 12%, #000 22%, #000 calc(var(--floor-bottom) - 80px),
+      rgb(0 0 0 / .8) calc(var(--floor-bottom) - 54px),
+      rgb(0 0 0 / .3) calc(var(--floor-bottom) - 24px), transparent var(--floor-bottom));
+  }
+  :root[data-theme="light"] #developments .board-selector-vignette {
+    background: linear-gradient(180deg, transparent 76%,
+      color-mix(in srgb, var(--bg) 46%, transparent) 90%, var(--bg)),
+      linear-gradient(90deg, color-mix(in srgb, var(--bg) 34%, transparent),
+      transparent 22%, transparent 78%, color-mix(in srgb, var(--bg) 34%, transparent));
+  }
+  :root[data-theme="light"] #developments::after {
+    background: linear-gradient(180deg, transparent, var(--bg));
+  }
+  #developments .selector-board-canvas { top: 66px; bottom: 128px; left: -2%; right: -2%; width: auto; transform: none; }
+  #developments .board-selector-toolbar { top: 20px; }
+  #developments .board-selector-heading { display: flex; flex-wrap: nowrap; align-items: flex-start; gap: 12px; }
+  #developments .board-selector-info { flex: 1; min-width: 0; }
+  #developments .board-selector-title-row { justify-content: space-between; gap: 12px; }
+  #developments .board-selector-heading h3 { font-size: 20px; line-height: 1.2; }
+  #developments .board-selector-count { flex-shrink: 0; padding-top: 8px; }
+  #developments .board-selector-arrow { top: 234px; width: 68px; height: 80px; }
+  #developments .board-selector-arrow-prev { left: 2px; }
+  #developments .board-selector-arrow-next { right: 2px; }
+  #developments .board-selector-arrow span { font-size: 58px; }
+  #developments .board-selector-hint { display: none; }
+  #developments .board-selector-switcher { margin-top: -52px; padding-bottom: 12px; }
+  #developments .board-selector-switcher > p { font-size: 11px; margin-bottom: 4px; }
+  #developments .board-selector-options {
+    padding: 4px; gap: 2px; grid-template-columns: repeat(7, minmax(44px, 1fr));
+    overflow-x: auto; scroll-padding: 4px; scrollbar-width: thin;
+  }
+  #developments .board-selector-options button { min-height: 64px; padding: 4px 0; font-size: 10px; }
+  #developments .board-selector-options img { height: 36px; }
+  .deliverables-grid { grid-template-columns: 1fr; }
+  .deliverable { display: grid; grid-template-columns: 30px minmax(0, 1fr); column-gap: 12px; padding-block: 20px; }
+  .deliverable .item-number { grid-row: 1 / 3; margin: 0; }
+  .deliverable h3 { margin: 0; }
+  .deliverable > p:last-child { grid-column: 2; margin-top: 8px; }
+  #contact .section-shell { padding-top: 32px; }
+  .contact-mail { margin-top: 24px; padding: 18px; }
+  .contact-mail strong { overflow-wrap: anywhere; }
+  .project-form { padding: 24px 18px; }
+  .form-row { grid-template-columns: 1fr; }
+  .footer-inner { gap: 24px; }
+}
+
+@media (max-height: 500px) and (max-width: 1180px) {
+  .site-nav { max-height: calc(100svh - 90px); overflow-y: auto; }
+  #developments .board-selector-info-card { max-height: 240px; }
+}
+
+/* The three real navigation links fit comfortably from 32.5em. The header
+   breakpoint is independent of the portrait/landscape hero breakpoint. */
+@media (min-width: 32.5em) and (max-width: 860px) {
+  .site-header .header-inner {
+    width: max-content;
+    max-width: calc(100% - 2 * var(--pad));
+    padding: 0 8px 0 22px;
+    gap: 22px;
+  }
+  :root[data-theme] .site-header .site-nav {
+    position: static;
+    inset: auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    max-height: none;
+    overflow: visible;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: none;
+  }
+  .site-header .site-nav a {
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    font-size: .875rem;
+  }
+  .site-header .site-nav .site-nav-cta,
+  .site-header .menu-button { display: none; }
+  .site-header .theme-toggle { width: 44px; height: 44px; }
+}

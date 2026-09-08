@@ -116,7 +116,7 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:"Golos Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.66}
-img{display:block;max-width:100%}
+img{display:block;max-width:100%;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
 a{color:var(--gold-soft)}
 a:hover{color:var(--fg)}
 .wrap{width:min(100%,860px);margin:0 auto;padding:0 var(--pad)}
@@ -140,7 +140,7 @@ footer{border-top:1px solid var(--line);padding-block:36px;color:var(--muted);fo
   <body>
     <header>
       <div class="wrap">
-        <a href="./"><img src="./brand/sks-logo-for-dark-bg.svg" alt="СКАЙСИНТ ИНЖИНИРИНГ" /></a>
+        <a href="./"><img src="./brand/sks-logo-for-dark-bg.svg" alt="СКАЙСИНТ ИНЖИНИРИНГ" draggable="false" /></a>
         <a class="back" href="./">На главную</a>
       </div>
     </header>

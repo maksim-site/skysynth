@@ -237,17 +237,17 @@ textarea:focus-visible {
 
 [data-reveal] {
   transition:
-    opacity 820ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 820ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter 820ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform, filter;
+    opacity 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-reveal="out"] {
-  opacity: 0;
-  filter: blur(8px);
-  transform: translate3d(0, 30px, 0) scale(0.99);
+  opacity: .75;
+  filter: none;
+  transform: translate3d(0, 12px, 0);
 }
+
+[data-reveal-immediate="true"] { transition: none; }
 
 [data-reveal="in"] {
   opacity: 1;
@@ -4013,6 +4013,22 @@ h2,
   object-fit: fill;
 }
 
+.hero-stage-background img,
+.hero-board-trigger img,
+.hero-mobile-stage img,
+.hero-mobile-board,
+.hero-media img {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+img {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
 .hero-product-zone {
   position: absolute;
   z-index: 2;
@@ -4080,6 +4096,12 @@ h2,
 
 .hero-product-experience[data-mode="interactive"] .hero-board-canvas {
   pointer-events: auto;
+}
+
+/* A warmed Canvas remains mounted at rest. R3F's inner event layer sets its
+   own pointer-events, so lock descendants too while the photo is in front. */
+.hero-product-experience:not([data-mode="interactive"]) .hero-board-canvas * {
+  pointer-events: none !important;
 }
 
 .hero-board-canvas canvas {
@@ -7491,8 +7513,7 @@ h2,
   background: transparent;
 }
 
-.deliverable,
-.deliverable:hover {
+.deliverable {
   min-height: 0;
   padding: 18px 0 20px;
   border-top: 1px solid var(--line);
@@ -7501,6 +7522,11 @@ h2,
   grid-template-columns: 30px minmax(0, 1fr);
   column-gap: 10px;
   align-content: start;
+}
+
+.deliverable:hover {
+  background: transparent;
+  border-top-color: var(--line-2);
 }
 
 .deliverable .item-number {
@@ -8213,19 +8239,146 @@ h2,
   }
 }
 
-/* Desktop gallery information belongs to the upper presentation area. Keep
-   the mobile composition unchanged, where the title already sits above the
-   board and the compact selector remains at the bottom. */
+/* The title stays above the model; the actual-board filmstrip follows the
+   stand in normal flow. Neither changes the calibrated photo/GLB frame. */
+.board-selector-toolbar {
+  position: absolute;
+  z-index: 18;
+  top: clamp(204px, 23vh, 232px);
+  right: max(var(--pad), calc((100% - var(--max)) / 2 + var(--pad)));
+  left: max(var(--pad), calc((100% - var(--max)) / 2 + var(--pad)));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  pointer-events: none;
+}
 
-@media (min-width: 621px) {
-  .board-selector-meta {
-    top: clamp(238px, 28vh, 292px);
-    bottom: auto;
+.board-selector-toolbar .board-selector-meta {
+  position: relative;
+  inset: auto;
+  min-width: 0;
+  flex: 1;
+  pointer-events: auto;
+}
+
+.board-selector-toolbar .board-selector-heading {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.board-selector-switcher {
+  position: relative;
+  z-index: 20;
+  width: min(440px, calc(100% - 2 * var(--pad)));
+  margin: -72px auto 0;
+  padding-bottom: 24px;
+  pointer-events: auto;
+}
+
+.board-selector-switcher > p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.board-selector-options {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.board-selector-options button {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 4px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.board-selector-options img {
+  display: block;
+  width: 100%;
+  height: 42px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.board-selector-options button[aria-current="true"] {
+  border-color: var(--gold-soft);
+  color: var(--fg);
+}
+
+@media (hover: hover) {
+  .board-selector-options button:hover:not(:disabled) {
+    border-color: var(--gold-soft);
+    color: var(--fg);
+  }
+}
+
+.board-selector-options button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.board-selector-options button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (max-width: 900px) and (min-width: 621px) {
+  .board-selector-toolbar {
+    top: 220px;
+    gap: 24px;
   }
 
-  .board-selector-dots {
-    top: clamp(252px, 29vh, 306px);
-    bottom: auto;
+}
+
+@media (max-width: 620px) {
+  .developments-section {
+    height: auto;
+  }
+
+  .board-selector-toolbar {
+    inset: 0;
+    display: block;
+  }
+
+  .board-selector-toolbar .board-selector-meta {
+    position: absolute;
+    top: 220px;
+    right: var(--pad);
+    left: var(--pad);
+  }
+
+  .board-selector-toolbar .board-selector-heading {
+    display: grid;
+    gap: 8px;
+  }
+
+  .board-selector-switcher {
+    margin-top: -88px;
+    padding-bottom: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-selector-options button {
+    transition: none;
   }
 }
 
@@ -8265,8 +8418,12 @@ h2,
 }
 
 /* The opening screen is a real asset gate, not an artificial intro: it leaves
-   after the current hero, fonts and section photographs are ready, with a
+   after the current hero, pendant layers and first-screen fonts are ready, with a
    timeout in React so a failed request can never trap the visitor. */
+
+html {
+  scrollbar-gutter: stable;
+}
 
 body.site-loading {
   overflow: hidden;
@@ -8494,6 +8651,12 @@ body.site-loading {
 .board-selector-info {
   position: relative;
   min-width: 0;
+}
+
+.board-selector-toolbar .board-selector-info {
+  /* Anchor the description to the complete title/count group, including
+     wrapped titles, so opening it cannot cover the count on narrow screens. */
+  position: static;
 }
 
 .board-selector-title-row {

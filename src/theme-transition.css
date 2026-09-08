@@ -1,0 +1,67 @@
+@property --theme-wave-radius {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.theme-wave-sheen {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  view-transition-name: theme-sheen;
+}
+
+/* Capture a stationary frame around the animated rig, so the new lamp keeps
+   swinging inside the transition. Its cord must remain behind the header. */
+:root[data-theme-transition] .hero-pendant-stage { view-transition-name: hero-pendant; }
+:root[data-theme-transition] .site-header { view-transition-name: site-header; }
+:root[data-theme-transition]::view-transition-group(hero-pendant) { z-index: 4; }
+:root[data-theme-transition]::view-transition-group(site-header) { z-index: 5; }
+
+:root[data-theme-transition]::view-transition {
+  pointer-events: none;
+}
+
+:root[data-theme-transition]::view-transition-group(*),
+:root[data-theme-transition]::view-transition-old(*),
+:root[data-theme-transition]::view-transition-new(*) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+:root[data-theme-transition]::view-transition-image-pair(root) { isolation: auto; }
+:root[data-theme-transition]::view-transition-old(root) { z-index: 1; }
+:root[data-theme-transition]::view-transition-new(root) { z-index: 2; }
+
+:root[data-theme-transition="wave"]::view-transition-new(root) {
+  mask-image: radial-gradient(circle at var(--theme-wave-x) var(--theme-wave-y),
+    #000 max(0px, calc(var(--theme-wave-radius) - var(--theme-wave-feather))),
+    rgb(0 0 0 / 0.84) max(0px, calc(var(--theme-wave-radius) - var(--theme-wave-feather) * 0.55)),
+    transparent max(0px, var(--theme-wave-radius)));
+}
+
+/* A shallow highlight/shade pair rolls across the feathered frontier. The
+   text and physical scene never move or distort underneath this light. */
+:root[data-theme-transition="wave"]::view-transition-group(theme-sheen) {
+  z-index: 3;
+  --wave-highlight: rgb(255 244 217 / 0.26);
+  --wave-shade: rgb(92 76 42 / 0.07);
+  background: radial-gradient(circle at var(--theme-wave-x) var(--theme-wave-y),
+    transparent max(0px, calc(var(--theme-wave-radius) - var(--theme-wave-feather) * 1.05)),
+    var(--wave-highlight) max(0px, calc(var(--theme-wave-radius) - var(--theme-wave-feather) * 0.55)),
+    transparent max(0px, calc(var(--theme-wave-radius) - var(--theme-wave-feather) * 0.16)),
+    var(--wave-shade) max(0px, var(--theme-wave-radius)),
+    transparent max(0px, calc(var(--theme-wave-radius) + var(--theme-wave-feather) * 0.4)));
+}
+
+:root[data-theme-destination="dark"]::view-transition-group(theme-sheen) {
+  --wave-highlight: rgb(224 201 159 / 0.14);
+  --wave-shade: rgb(6 8 10 / 0.14);
+}
+
+:root[data-theme-transition]::view-transition-old(theme-sheen),
+:root[data-theme-transition]::view-transition-new(theme-sheen) { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-wave-sheen { display: none; }
+}

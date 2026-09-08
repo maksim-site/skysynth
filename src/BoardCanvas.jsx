@@ -1,11 +1,10 @@
 import { Canvas } from "@react-three/fiber";
-import { Suspense } from "react";
 import { PCFShadowMap } from "three";
-import { BoardModelPreloader, BoardScene } from "./boardScene.jsx";
+import { BoardScene } from "./boardScene.jsx";
 
 /**
  * Lazy entry point for everything three.js. Nothing on the first paint imports
- * this file, so the 3D stack only downloads when a visitor opens a board.
+ * this file. Idle/near-viewport preparation loads it ahead of interaction.
  */
 export function BoardCanvas({
   autoRotate,
@@ -16,8 +15,10 @@ export function BoardCanvas({
   floating,
   onReady,
   onPreloadReady,
+  onPresentationRest,
   orbit,
   preloadBoards,
+  presentationMotion = "idle",
   reducedMotion,
   theme,
   transitionDirection,
@@ -27,7 +28,7 @@ export function BoardCanvas({
     <Canvas
       camera={{ position: [0, 0.05, cameraZ], fov: 32, near: 0.1, far: 40 }}
       dpr={compact ? [1, 1.25] : [1, 1.65]}
-      frameloop={floating || transitionMotion !== "idle" ? "always" : "demand"}
+      frameloop={floating || transitionMotion !== "idle" || presentationMotion === "returning" ? "always" : "demand"}
       shadows={{ type: PCFShadowMap }}
       gl={{
         alpha: true,
@@ -35,22 +36,18 @@ export function BoardCanvas({
         powerPreference: "high-performance",
       }}
     >
-      {preloadBoards?.map((preloadBoard) => (
-        <Suspense fallback={null} key={preloadBoard.model}>
-          <BoardModelPreloader
-            board={preloadBoard}
-            dracoPath={dracoPath}
-            onReady={onPreloadReady}
-          />
-        </Suspense>
-      ))}
       <BoardScene
         autoRotate={autoRotate}
         board={board}
+        cameraZ={cameraZ}
         compact={compact}
         dracoPath={dracoPath}
         floating={floating}
         onReady={onReady}
+        onPreloadReady={onPreloadReady}
+        preloadBoards={preloadBoards}
+        presentationMotion={presentationMotion}
+        onPresentationRest={onPresentationRest}
         orbit={orbit}
         reducedMotion={reducedMotion}
         theme={theme}

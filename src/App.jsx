@@ -1,11 +1,13 @@
 import {
   lazy,
   Suspense,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import {
   Cpu,
   CircuitBoard,
@@ -14,16 +16,24 @@ import {
   Moon,
   Plane,
   RadioTower,
+  ScanSearch,
   Sun,
 } from "lucide-react";
 import { useCookieChoice, useMetrika, useReveal, useScrolled } from "./useReveal.js";
 import { preloadBoardModel, supportsWebGL, useMediaQuery } from "./media.js";
+import "./services.css";
+import { HIDDEN_PENDANT_QUERY, NARROW_HERO_QUERY } from "./heroLayout.js";
+import { transitionTheme } from "./themeTransition.js";
+import ServiceOffering from "./ServiceOffering.jsx";
+import HeroMobileScene from "./HeroMobileScene.jsx";
 
-const HeroBoardExperience = lazy(() =>
+const loadHeroBoardExperience = () =>
   import("./HeroBoardExperience").then((module) => ({
     default: module.HeroBoardExperience,
-  })),
-);
+  }));
+const HeroBoardExperience = lazy(loadHeroBoardExperience);
+
+const HeroPendant = lazy(() => import("./HeroPendant.jsx"));
 
 const BoardGallery = lazy(() =>
   import("./BoardGallery").then((module) => ({
@@ -254,20 +264,20 @@ const heroBoards = [
 
 const leadServiceBlocks = [
   {
-    title: "Аппаратная часть",
-    text: "Схема, топология платы и подбор элементной базы.",
+    title: "Разработка",
+    text: "Схемотехника, печатные платы и программное обеспечение для встраиваемых систем.",
   },
   {
-    title: "Программная часть",
-    text: "Встраиваемое ПО под плату и требования проекта.",
+    title: "Производство",
+    text: "Опытные образцы и серийное производство. Координация подрядчиков и поставщиков компонентов.",
   },
   {
-    title: "Проверка",
-    text: "Опытные образцы, функциональные, климатические и электрические испытания.",
+    title: "Испытания и контроль качества",
+    text: "Функциональные, климатические и электрические испытания. Контроль качества на всех этапах.",
   },
   {
-    title: "Передача",
-    text: "КД по ЕСКД и файлы для производства.",
+    title: "Сопровождение",
+    text: "Техническое сопровождение проектов, модернизация и доработка существующих изделий.",
   },
 ];
 
@@ -283,39 +293,56 @@ const services = [
     icon: RadioTower,
   },
   {
-    title: "Электроника для БПЛА",
+    title: "Электроника для БАС",
     text: "Проектируем полётные контроллеры, ESC, видеопередатчики и каналы связи с учётом вибраций, тепла и габаритов корпуса.",
     icon: Plane,
   },
   {
     title: "Встраиваемое ПО",
-    text: "Разрабатываем программное обеспечение для встраиваемых систем. Прошивка и плата проектируются под один набор требований.",
+    text: "Разрабатываем программное обеспечение для встраиваемых систем.",
     icon: Cpu,
   },
   {
     title: "Документация по ЕСКД",
-    text: "Готовим схемы по ТЗ, сборочные чертежи и спецификации по ЕСКД; ведём изменения КД на всех этапах.",
+    text: "Готовим схемы по ТЗ, сборочные чертежи и спецификации по ЕСКД. Вносим изменения в КД на всех этапах жизненного цикла изделия.",
     icon: FileText,
   },
   {
     title: "Библиотеки и импортозамещение",
-    text: "Ведём библиотеки Altium Designer: УГО, посадочные места и 3D-модели. Подбираем элементную базу с учётом доступности.",
+    text: "Создаём и ведём библиотеки Altium Designer: УГО, посадочные места и 3D-модели. Подбираем элементную базу с учётом доступности и задач импортозамещения.",
     icon: Library,
   },
 ];
 
-const reverseSteps = [
+// Development is shortened from скс.docx. Reverse-engineering copy is restored
+// verbatim from the published 2cb1635 baseline, confirmed by the user on 05.09.
+const serviceOfferings = [
   {
-    title: "На входе",
-    text: "Готовая плата или устройство, к которому не осталось схемы, топологии и производственных файлов.",
+    id: "development-service",
+    icon: CircuitBoard,
+    title: "Разработка программно-аппаратных комплексов",
+    description: "Разрабатываем радиоэлектронную аппаратуру, электронные модули и системы.",
+    details: leadServiceBlocks,
   },
   {
-    title: "Что делаем",
-    text: "Разбираем изделие, определяем элементную базу, восстанавливаем принципиальную схему и топологию платы.",
-  },
-  {
-    title: "На выходе",
-    text: "Схема, топология, производственные файлы и предложения по замене снятых с производства компонентов.",
+    id: "reverse",
+    icon: ScanSearch,
+    title: "Реверс-инжиниринг",
+    description: "Восстанавливаем документацию по готовому изделию, когда исходных файлов не осталось или их нужно проверить.",
+    details: [
+      {
+        title: "На входе",
+        text: "Готовая плата или устройство, к которому не осталось схемы, топологии и производственных файлов.",
+      },
+      {
+        title: "Что делаем",
+        text: "Разбираем изделие, определяем элементную базу, восстанавливаем принципиальную схему и топологию платы.",
+      },
+      {
+        title: "На выходе",
+        text: "Схема, топология, производственные файлы и предложения по замене снятых с производства компонентов.",
+      },
+    ],
   },
 ];
 
@@ -347,7 +374,7 @@ const deliverables = [
   },
   {
     title: "Встраиваемое ПО",
-    text: "Программное обеспечение под ту же плату и тот же набор требований.",
+    text: "Программное обеспечение для встраиваемых систем.",
   },
   {
     title: "Опытный образец",
@@ -377,11 +404,23 @@ function buildMailto(form) {
 
 export function App() {
   const shellRef = useRef(null);
-  const isCompact = useMediaQuery("(max-width: 620px)");
+  const isPhoneHero = useMediaQuery(HIDDEN_PENDANT_QUERY);
   const [menuOpen, setMenuOpen] = useState(false);
   const [siteReady, setSiteReady] = useState(false);
+  const [pendantEnabled, setPendantEnabled] = useState(true);
+  const [pendantStartup] = useState(() => {
+    const signal = { ready: false };
+    signal.promise = new Promise((resolve) => { signal.resolve = resolve; });
+    return signal;
+  });
+  const handlePendantReady = useCallback((ready) => {
+    pendantStartup.ready = ready;
+    pendantStartup.resolve();
+    if (!ready) setPendantEnabled(false);
+  }, [pendantStartup]);
   const [formState, setFormState] = useState({ status: "idle", message: "" });
   const [themeSwitching, setThemeSwitching] = useState(false);
+  const themeSwitchLock = useRef(false);
   const [theme, setTheme] = useState(() => {
     try {
       return window.localStorage.getItem("skysynth-theme") === "light"
@@ -400,11 +439,18 @@ export function App() {
 
   useEffect(() => {
     let cancelled = false;
+    let timeoutId;
+    let revealTimer;
+    let layoutFrame;
+    let revealFrame;
     const minimumDisplayMs = 620;
     const startedAt = performance.now();
-    const compactHero = window.matchMedia("(max-width: 620px)").matches;
-    const maximumDisplayMs = compactHero ? 3600 : 2200;
-    const narrowHero = window.matchMedia("(max-width: 860px)").matches;
+    const compactHero = window.matchMedia(HIDDEN_PENDANT_QUERY).matches;
+    const narrowHero = window.matchMedia(NARROW_HERO_QUERY).matches;
+    const needsPendant = !window.matchMedia(HIDDEN_PENDANT_QUERY).matches;
+    // This is a failure watchdog, not an extra intro delay. The complete
+    // desktop scene may need longer on a cold/slow connection.
+    const maximumDisplayMs = needsPendant ? 8000 : compactHero ? 3600 : 2200;
     const currentHero = narrowHero
       ? heroAssets[theme].mobile
       : heroAssets[theme].desktop;
@@ -416,24 +462,43 @@ export function App() {
       preloadThemeImage(currentHero),
       preloadThemeImage(heroBoards[0].image),
       preloadCriticalFonts(),
+      loadHeroBoardExperience().catch(() => undefined),
+      needsPendant ? pendantStartup.promise : null,
     ]);
 
     const timeout = new Promise((resolve) => {
-      window.setTimeout(resolve, maximumDisplayMs);
+      timeoutId = window.setTimeout(resolve, maximumDisplayMs);
     });
 
     Promise.race([criticalAssets, timeout]).then(() => {
+      if (cancelled) return;
       const remaining = Math.max(
         0,
         minimumDisplayMs - (performance.now() - startedAt),
       );
-      window.setTimeout(() => {
-        if (!cancelled) setSiteReady(true);
+      revealTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        // If the optional layer failed/timed out, keep the original hero for
+        // this visit; never insert a late lamp after the loader has left.
+        if (needsPendant && !pendantStartup.ready) setPendantEnabled(false);
+        document.body.classList.remove("site-loading");
+        // Commit final viewport geometry and decoded image layers underneath
+        // the still-opaque loader before starting its fade.
+        layoutFrame = requestAnimationFrame(() => {
+          revealFrame = requestAnimationFrame(() => {
+            if (!cancelled) setSiteReady(true);
+          });
+        });
       }, remaining);
+      window.clearTimeout(timeoutId);
     });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
+      window.clearTimeout(revealTimer);
+      cancelAnimationFrame(layoutFrame);
+      cancelAnimationFrame(revealFrame);
       document.body.classList.remove("site-loading");
     };
     // The initial theme and viewport are intentionally captured once. A later
@@ -444,6 +509,13 @@ export function App() {
   useEffect(() => {
     if (!siteReady) return;
     document.body.classList.remove("site-loading");
+    // Hash targets do not exist when the initial HTML first loads. Resolve
+    // them once the ready layout is mounted, without changing later scrolling.
+    const target = document.getElementById(window.location.hash.slice(1));
+    const frame = target
+      ? requestAnimationFrame(() => target.scrollIntoView({ behavior: "instant" }))
+      : null;
+    return () => { if (frame !== null) cancelAnimationFrame(frame); };
   }, [siteReady]);
 
   useLayoutEffect(() => {
@@ -542,7 +614,7 @@ export function App() {
       setMenuOpen(false);
     };
     const closeOnWideViewport = () => {
-      if (window.innerWidth > 860) setMenuOpen(false);
+      if (window.matchMedia("(min-width: 32.5em)").matches) setMenuOpen(false);
     };
 
     document.addEventListener("keydown", closeOnEscape);
@@ -571,17 +643,23 @@ export function App() {
     });
   }
 
-  async function toggleTheme() {
-    if (themeSwitching) return;
-
+  async function toggleTheme(event) {
+    if (themeSwitchLock.current) return;
+    themeSwitchLock.current = true;
+    const button = event.currentTarget.getBoundingClientRect();
     const nextTheme = theme === "dark" ? "light" : "dark";
     setThemeSwitching(true);
-    await preloadThemeImages(nextTheme);
-    setTheme(nextTheme);
-
-    window.requestAnimationFrame(() => {
+    try {
+      await preloadThemeImages(nextTheme);
+      await transitionTheme({
+        button,
+        nextTheme,
+        commit: () => flushSync(() => setTheme(nextTheme)),
+      });
+    } finally {
+      themeSwitchLock.current = false;
       setThemeSwitching(false);
-    });
+    }
   }
 
   async function handleSubmit(event) {
@@ -628,7 +706,14 @@ export function App() {
   }
 
   return (
-    <div className="site-shell" data-ready={siteReady ? "true" : "false"} ref={shellRef}>
+    <div
+      className="site-shell"
+      data-ready={siteReady ? "true" : "false"}
+      ref={shellRef}
+      onDragStart={(event) => {
+        if (event.target instanceof HTMLImageElement) event.preventDefault();
+      }}
+    >
       <div
         className="site-loader"
         data-visible={siteReady ? "false" : "true"}
@@ -642,6 +727,7 @@ export function App() {
           width="208"
           height="68"
           fetchPriority="high"
+          draggable={false}
         />
         <span className="site-loader-track" aria-hidden="true">
           <span />
@@ -736,9 +822,9 @@ export function App() {
               <span>от идеи до производства</span>
             </h1>
             <p className="hero-description">
-              Проектируем платы, высокочастотные узлы и встраиваемое ПО для
-              беспилотных систем и другой сложной радиоэлектроники. Собираем
-              прототипы, проводим испытания и передаём документацию по ЕСКД.
+              Разрабатываем электронику для БАС и других сложных систем: платы,
+              высокочастотные узлы, встроенное ПО, прототипы, испытания и КД по
+              ЕСКД. Также выполняем реверс-инжиниринг готовых изделий.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href="#contact">
@@ -748,90 +834,65 @@ export function App() {
           </div>
 
           <div className="hero-visual">
-            {isCompact ? (
-              <div className="hero-mobile-scene" aria-hidden="true">
-                <div className="hero-mobile-composite">
-                  <picture className="hero-mobile-stage">
+            <Suspense
+              fallback={isPhoneHero ? (
+                <HeroMobileScene background={heroAsset.mobile} board={heroBoards[0].image} />
+              ) : (
+                <div className="hero-media" aria-hidden="true">
+                  <picture>
+                    <source media={NARROW_HERO_QUERY} srcSet={heroAsset.mobile} />
                     <img
-                      src={heroAsset.mobile}
+                      src={heroAsset.desktop}
                       alt=""
-                      width="1085"
-                      height="1450"
+                      width="1586"
+                      height="992"
                       fetchPriority="high"
+                      draggable={false}
                     />
                   </picture>
-                  <img
-                    className="hero-mobile-board"
-                    src={heroBoards[0].image}
-                    alt=""
-                    width="1600"
-                    height="1600"
-                    fetchPriority="high"
-                  />
                 </div>
-              </div>
-            ) : (
-              <Suspense
-                fallback={
-                  <div className="hero-media" aria-hidden="true">
-                    <picture>
-                      <source media="(max-width: 860px)" srcSet={heroAsset.mobile} />
-                      <img
-                        src={heroAsset.desktop}
-                        alt=""
-                        width="1586"
-                        height="992"
-                        fetchPriority="high"
-                      />
-                    </picture>
-                  </div>
-                }
-              >
-                <HeroBoardExperience
-                  backgrounds={heroAsset}
-                  boards={heroBoards}
-                  dracoPath={assetPath("draco/")}
-                  theme={theme}
-                />
+              )}
+            >
+              <HeroBoardExperience
+                backgrounds={heroAsset}
+                boards={heroBoards}
+                dracoPath={assetPath("draco/")}
+                theme={theme}
+              />
+            </Suspense>
+            {pendantEnabled ? (
+              <Suspense fallback={null}>
+                <HeroPendant onReady={handlePendantReady} />
               </Suspense>
-            )}
+            ) : null}
           </div>
         </section>
 
-        <section className="section services-section" id="services">
+        <section className="section services-section" id="services" aria-labelledby="services-title">
           <div className="section-shell">
-            <div className="section-heading-row section-heading-with-copy" data-reveal="out">
-              <div>
-                <p className="eyebrow">Услуги</p>
-                <h2>Что мы <em>делаем</em></h2>
-              </div>
-              <p className="section-intro">
-                Берём устройство целиком или подключаемся к отдельному этапу.
-              </p>
+            <div className="section-heading-row" data-reveal="out">
+              <h2 id="services-title">Услуги</h2>
             </div>
 
-            <article className="lead-service" data-reveal="out">
-              <div className="lead-service-head">
-                <p className="eyebrow">Устройство целиком</p>
-                <h3>Разработка программно-аппаратных комплексов</h3>
+            <div className="service-offerings">
+              <div className="service-scene-art" aria-hidden="true">
+                <img
+                  src={sectionImages.reverse[theme]}
+                  alt=""
+                  loading="lazy"
+                  width="1672"
+                  height="941"
+                  draggable={false}
+                />
               </div>
+              {serviceOfferings.map((offering) => (
+                <ServiceOffering offering={offering} key={offering.id} />
+              ))}
+            </div>
 
-              <ol className="lead-service-grid">
-                {leadServiceBlocks.map((block, index) => (
-                  <li className="lead-service-block" key={block.title}>
-                    <span className="lead-service-index" aria-hidden="true">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <h4>{block.title}</h4>
-                    <p>{block.text}</p>
-                  </li>
-                ))}
-              </ol>
-            </article>
-
-            <p className="eyebrow service-list-label" data-reveal="out">
-              Направления работ
-            </p>
+            <h3 className="service-directions-title" data-reveal="out">
+              Направления разработки
+            </h3>
             <div className="service-list">
               {services.map((service) => (
                 <article className="service-row" data-reveal="out" key={service.title}>
@@ -839,48 +900,13 @@ export function App() {
                     <service.icon size={20} strokeWidth={1.5} />
                   </span>
                   <div className="service-head">
-                    <h3>{service.title}</h3>
+                    <h4>{service.title}</h4>
                   </div>
                   <div className="service-body">
                     <p>{service.text}</p>
                   </div>
                 </article>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section reverse-section" id="reverse">
-          <div className="section-shell">
-            <div className="reverse-panel" data-reveal="out">
-              <div className="reverse-copy">
-                <p className="eyebrow">Работа по готовому изделию</p>
-                <h2>Реверс-инжиниринг</h2>
-                <p>
-                  Восстанавливаем документацию по готовому изделию, когда
-                  исходных файлов не осталось или их нужно проверить.
-                </p>
-              </div>
-
-              <figure className="reverse-media">
-                <img
-                  src={sectionImages.reverse[theme]}
-                  alt="Концептуальная визуализация электронной платы на лабораторном стенде"
-                  loading="lazy"
-                  width="1672"
-                  height="941"
-                />
-                <figcaption>Визуализация по материалам проекта</figcaption>
-              </figure>
-
-              <div className="reverse-steps">
-                {reverseSteps.map((step) => (
-                  <div className="reverse-step" key={step.title}>
-                    <h3>{step.title}</h3>
-                    <p>{step.text}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </section>

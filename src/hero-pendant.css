@@ -1,0 +1,98 @@
+.hero-pendant {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: clip;
+  --pendant-level: 0.8;
+}
+.hero-pendant-stage {
+  position: absolute;
+  top: var(--pendant-stage-top, 0px);
+  left: calc(50% + var(--hero-stage-nudge, 0px));
+  width: var(--pendant-stage-width, 100%);
+  height: var(--pendant-stage-height, 100%);
+  transform: translateX(-50%);
+}
+.hero-pendant-rig {
+  position: absolute;
+  top: 0; left: 0; width: 58%; height: 100%;
+  /* One smaller moving surface. Child x/width coordinates are normalized
+     to 58% of the photo; physical positions and swing pivot stay identical. */
+  transform-origin: 44.6797% -3.2258%;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.hero-pendant-lamp {
+  position: absolute;
+  top: 0;
+  left: 30.2214%;
+  width: 29.1343%;
+  height: auto;
+  display: block;
+}
+.hero-pendant-illumination { opacity: var(--pendant-level); }
+.hero-pendant-beam {
+  position: absolute;
+  top: 23.9919%;
+  left: 15.3259%;
+  width: 58.7069%;
+  height: 61.49%;
+}
+.hero-pendant-mist {
+  position: absolute;
+  top: 29%;
+  left: 11.7241%;
+  width: 70.6897%;
+  height: 41%;
+  opacity: .78;
+}
+.hero-pendant-pool {
+  position: absolute;
+  left: 5.1724%;
+  top: 66%;
+  width: 79.3103%;
+  height: 31%;
+  background: radial-gradient(ellipse, #dac29918 0%, #dac29909 40%, #dac29900 72%);
+}
+.hero-pendant-rim {
+  position: absolute;
+  left: 30.1724%;
+  top: 23.3%;
+  width: 29.3103%;
+  height: 3%;
+  background: radial-gradient(ellipse, #f2d7a526, #f2d7a500 70%);
+}
+
+/* Both decoded materials share the exact matte and pendulum. Switching the
+   visible layer cannot restart the swing or expose an unloaded image. */
+.hero-pendant-lamp-light { opacity: 0; top: -0.65%; }
+:root[data-theme="light"] .hero-pendant-lamp-dark { opacity: 0; }
+:root[data-theme="light"] .hero-pendant-lamp-light { opacity: 1; }
+:root[data-theme="light"] .hero-pendant-beam,
+:root[data-theme="light"] .hero-pendant-mist {
+  filter: brightness(1.35) saturate(0.65);
+}
+:root[data-theme="light"] .hero-pendant-illumination {
+  opacity: calc(var(--pendant-level) * 0.8);
+}
+:root[data-theme="light"] .hero-pendant-pool {
+  background: radial-gradient(ellipse, #fff7df24 0%, #fff7df0d 40%, #fff7df00 72%);
+}
+:root[data-theme="light"] .hero-pendant-rim {
+  background: radial-gradient(ellipse, #fff4d85c, #fff4d800 70%);
+}
+@media (min-width: 961px) {
+  :root[data-theme="dark"] .hero:has(.hero-pendant[data-ready="true"]) .hero-stage-background img {
+    filter: brightness(0.45) saturate(0.87);
+  }
+  :root[data-theme="dark"] .hero:has(.hero-pendant[data-ready="true"]) .hero-visual::after {
+    background:
+      linear-gradient(90deg, #08090a30 0%, #08090a16 42%, #08090a00 65%),
+      linear-gradient(180deg, #08090a20, #08090a00 26%, #08090a00 65%, #08090acc 100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-pendant-rig { will-change: auto; }
+}
